@@ -19,338 +19,116 @@
   --shadow: 0 2px 12px rgba(13,13,13,0.08);
   --shadow-lg: 0 8px 32px rgba(13,13,13,0.12);
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
 
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--paper);
-  color: var(--ink);
-  min-height: 100vh;
-}
-
-/* ── HEADER ── */
 header {
   border-bottom: 2px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--ink); color: var(--paper);
   padding: 0 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; position: sticky; top: 0; z-index: 100;
 }
-
-.logo {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: -0.5px;
-}
+.logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
 .logo span { color: var(--amber); }
-
-.header-stats {
-  display: flex;
-  gap: 32px;
-  font-size: 12px;
-  opacity: 0.7;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
+.header-stats { display: flex; gap: 32px; font-size: 12px; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase; }
 .header-stats strong { color: var(--amber); font-family: 'Syne', sans-serif; font-size: 14px; }
 
-/* ── LAYOUT ── */
 .container { max-width: 1280px; margin: 0 auto; padding: 40px 48px; }
 
-/* ── HERO STRIP ── */
 .hero {
-  background: var(--ink);
-  color: var(--paper);
-  border-radius: 16px;
-  padding: 40px 48px;
-  margin-bottom: 40px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
+  background: var(--ink); color: var(--paper);
+  border-radius: 16px; padding: 40px 48px; margin-bottom: 40px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+  position: relative; overflow: hidden;
 }
 .hero::before {
-  content: '';
-  position: absolute;
-  right: -60px; top: -60px;
-  width: 300px; height: 300px;
-  border-radius: 50%;
+  content: ''; position: absolute; right: -60px; top: -60px;
+  width: 300px; height: 300px; border-radius: 50%;
   background: radial-gradient(circle, rgba(232,168,56,0.2) 0%, transparent 70%);
 }
-
-.hero h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: 36px;
-  font-weight: 800;
-  line-height: 1.1;
-  margin-bottom: 12px;
-}
+.hero h1 { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.1; margin-bottom: 12px; }
 .hero h1 em { color: var(--amber); font-style: normal; }
 .hero p { font-size: 15px; opacity: 0.7; line-height: 1.6; }
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.stat-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 16px 20px;
-}
-.stat-card .num {
-  font-family: 'Syne', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--amber);
-}
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px 20px; }
+.stat-card .num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--amber); }
 .stat-card .lbl { font-size: 11px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 
-/* ── MAIN GRID ── */
-.main-grid {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 28px;
-  align-items: start;
-}
+.main-grid { display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: start; }
 
-/* ── PANEL ── */
-.panel {
-  background: var(--card-bg);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-}
+.panel { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; }
 .panel-header {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 16px 24px;
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: var(--ink); color: var(--paper);
+  padding: 16px 24px; font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
 }
-.panel-header .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--amber);
-}
+.panel-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
 .panel-body { padding: 24px; }
 
-/* ── FORM CONTROLS ── */
 .form-group { margin-bottom: 18px; }
-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: #666;
-  margin-bottom: 6px;
-}
+label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: #666; margin-bottom: 6px; }
 select, input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  background: var(--paper);
-  color: var(--ink);
-  appearance: none;
-  transition: border-color 0.2s;
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  background: var(--paper); color: var(--ink); appearance: none; transition: border-color 0.2s;
 }
-select:focus, input:focus {
-  outline: none;
-  border-color: var(--teal);
-}
+select:focus, input:focus { outline: none; border-color: var(--teal); }
 
-.algo-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 6px;
-}
+.algo-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .pill {
-  padding: 7px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: transparent;
-  font-family: 'DM Sans', sans-serif;
-  color: var(--ink);
+  padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+  font-size: 12px; cursor: pointer; transition: all 0.2s; background: transparent;
+  font-family: 'DM Sans', sans-serif; color: var(--ink);
 }
 .pill:hover { border-color: var(--teal); color: var(--teal); }
-.pill.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
-}
+.pill.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
 .btn {
-  width: 100%;
-  padding: 13px;
-  background: var(--teal);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Syne', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
+  width: 100%; padding: 13px; background: var(--teal); color: white;
+  border: none; border-radius: 8px; font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer;
+  transition: all 0.2s; text-transform: uppercase;
 }
 .btn:hover { background: var(--ink); transform: translateY(-1px); box-shadow: var(--shadow); }
 .btn:active { transform: translateY(0); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.btn-secondary {
-  background: transparent;
-  border: 1.5px solid var(--border);
-  color: var(--ink);
-  margin-top: 8px;
-}
+.btn-secondary { background: transparent; border: 1.5px solid var(--border); color: var(--ink); margin-top: 8px; }
 .btn-secondary:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn-rust { background: var(--rust); }
+.btn-rust:hover { background: #a03820; }
 
-/* ── RESULTS AREA ── */
-.results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.results-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-}
-.algo-badge {
-  background: var(--amber-light);
-  color: var(--ink);
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.results-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+.algo-badge { background: var(--amber-light); color: var(--ink); padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* ── PRODUCT CARDS ── */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .product-card {
-  background: var(--card-bg);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.2s;
-  cursor: pointer;
-  position: relative;
+  background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 20px; transition: all 0.2s; cursor: pointer; position: relative;
   animation: fadeUp 0.4s ease both;
 }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.product-card:hover {
-  border-color: var(--teal);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-.product-card .cat-tag {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.product-card:hover { border-color: var(--teal); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.product-card .cat-tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; margin-bottom: 10px; }
 .tag-electronics { background: #dbeafe; color: #1d4ed8; }
 .tag-home { background: #fce7f3; color: #be185d; }
 .tag-kitchen { background: #dcfce7; color: #166534; }
 .tag-smart { background: #f3e8ff; color: #7c3aed; }
 .tag-fitness { background: #fff7ed; color: #c2410c; }
 .tag-personal { background: #ecfdf5; color: #065f46; }
-
-.product-card .pname {
-  font-family: 'Syne', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 4px;
-}
-.product-card .brand {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 12px;
-}
-.product-card .price {
-  font-family: 'Syne', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--teal);
-}
+.product-card .pname { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
+.product-card .brand { font-size: 12px; color: #888; margin-bottom: 12px; }
+.product-card .price { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--teal); }
 .product-card .price span { font-size: 11px; font-weight: 400; color: #999; }
+.score-bar { margin-top: 10px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--amber)); border-radius: 2px; transition: width 0.6s ease; }
+.because-badge { margin-top: 8px; padding: 4px 8px; background: var(--amber-light); border-radius: 6px; font-size: 10px; color: #7a5a00; line-height: 1.4; }
 
-.score-bar {
-  margin-top: 10px;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.score-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--teal), var(--amber));
-  border-radius: 2px;
-  transition: width 0.6s ease;
-}
-
-/* ── HISTORY ── */
 .history-list { display: flex; flex-direction: column; gap: 8px; }
-.history-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--paper);
-  border-radius: 8px;
-  font-size: 13px;
-  border: 1px solid var(--border);
-}
-.history-item .i-type {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-}
+.history-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper); border-radius: 8px; font-size: 13px; border: 1px solid var(--border); }
+.history-item .i-type { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; text-transform: uppercase; }
 .i-purchase { background: #dcfce7; color: #166534; }
 .i-view { background: #f1f5f9; color: #475569; }
 .i-wishlist { background: #fce7f3; color: #be185d; }
@@ -358,140 +136,99 @@ select:focus, input:focus {
 .history-item .i-name { font-weight: 500; flex: 1; }
 .history-item .i-date { font-size: 11px; color: #999; }
 
-/* ── EVALUATION TABLE ── */
 .eval-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.eval-table th {
-  text-align: left;
-  padding: 10px 14px;
-  font-family: 'Syne', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  border-bottom: 2px solid var(--ink);
-}
+.eval-table th { text-align: left; padding: 10px 14px; font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; border-bottom: 2px solid var(--ink); }
 .eval-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .eval-table tr:last-child td { border-bottom: none; }
-.eval-table .metric-val {
-  font-family: 'Syne', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--teal);
-}
+.eval-table .metric-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--teal); }
 .eval-bar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 4px; overflow: hidden; }
 .eval-bar-fill { height: 100%; background: var(--teal); border-radius: 3px; }
 
-/* ── TABS ── */
 .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
-.tab {
-  padding: 10px 20px;
-  font-family: 'Syne', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.2s;
-  color: #888;
-}
+.tab { padding: 10px 20px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; color: #888; }
 .tab.active { border-bottom-color: var(--ink); color: var(--ink); }
 .tab:hover:not(.active) { color: var(--teal); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ── LOADING ── */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 40px;
-  color: #888;
-  font-size: 14px;
-}
-.spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--teal);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
+.loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 40px; color: #888; font-size: 14px; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #aaa;
-}
+.empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
 .empty-state svg { margin-bottom: 12px; opacity: 0.3; }
 .empty-state p { font-size: 14px; }
-
-/* ── PILL TABS FOR SIMILAR ── */
-.similar-section { margin-top: 28px; }
-.section-label {
-  font-family: 'Syne', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #888;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-/* ── SIMILAR PRODUCT ── */
-.product-select-group {
-  display: flex;
-  gap: 8px;
-}
+.section-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #888; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.product-select-group { display: flex; gap: 8px; }
 .product-select-group select { flex: 1; }
-.product-select-group .btn-sm {
-  padding: 10px 16px;
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  border-radius: 8px;
-  font-family: 'Syne', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
+.product-select-group .btn-sm { padding: 10px 16px; background: var(--ink); color: var(--paper); border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
 .product-select-group .btn-sm:hover { background: var(--teal); }
 
-/* ── NOTIFICATION ── */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--ink);
-  color: var(--paper);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 13px;
-  transform: translateY(80px);
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 999;
-}
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 8px; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; }
 .toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── GUEST COLD-START SECTION ── */
+.guest-section { margin-top: 56px; border-top: 2px dashed var(--border); padding-top: 44px; }
+.guest-banner {
+  background: linear-gradient(135deg, #1c1c1c 0%, #2d1a10 100%);
+  color: var(--paper); border-radius: 16px; padding: 36px 44px;
+  margin-bottom: 32px; position: relative; overflow: hidden;
+}
+.guest-banner::before {
+  content: ''; position: absolute; right: -40px; bottom: -40px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,79,44,0.25) 0%, transparent 70%);
+}
+.guest-banner h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+.guest-banner h2 em { color: var(--rust); font-style: normal; }
+.guest-banner p { font-size: 14px; opacity: 0.65; max-width: 520px; line-height: 1.6; }
+.guest-banner .steps { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+.guest-banner .step { display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.8; }
+.guest-banner .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--rust); color: white; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.guest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+
+.search-input { width: 100%; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; background: var(--paper); margin-bottom: 10px; }
+.search-input:focus { outline: none; border-color: var(--teal); }
+
+.cat-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.cat-pill { padding: 5px 12px; border: 1.5px solid var(--border); border-radius: 14px; font-size: 11px; cursor: pointer; transition: all 0.18s; background: transparent; font-family: 'DM Sans', sans-serif; color: #555; font-weight: 500; }
+.cat-pill:hover { border-color: var(--rust); color: var(--rust); }
+.cat-pill.active { background: var(--rust); border-color: var(--rust); color: white; }
+
+.catalogue-list { display: flex; flex-direction: column; gap: 6px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+.catalogue-list::-webkit-scrollbar { width: 4px; }
+.catalogue-list::-webkit-scrollbar-track { background: var(--border); border-radius: 2px; }
+.catalogue-list::-webkit-scrollbar-thumb { background: #aaa; border-radius: 2px; }
+
+.cat-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card-bg); cursor: pointer; transition: all 0.18s; font-size: 13px; }
+.cat-item:hover { border-color: var(--teal); background: var(--teal-light); }
+.cat-item.added { border-color: var(--rust); background: #fff0ed; }
+.cat-item .ci-name { font-weight: 500; flex: 1; line-height: 1.3; }
+.cat-item .ci-meta { font-size: 11px; color: #999; }
+.cat-item .ci-price { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+.cat-item .ci-add { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--teal); background: transparent; color: var(--teal); font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.cat-item.added .ci-add { background: var(--rust); border-color: var(--rust); color: white; font-size: 14px; }
+
+.basket-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.basket-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.basket-count { background: var(--rust); color: white; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; min-width: 24px; text-align: center; }
+.basket-list { display: flex; flex-direction: column; gap: 8px; min-height: 60px; margin-bottom: 16px; }
+.basket-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--paper); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; animation: fadeUp 0.25s ease both; }
+.basket-item .bi-name { font-weight: 500; flex: 1; font-size: 12px; line-height: 1.3; }
+.bi-type { padding: 3px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 10px; background: var(--paper); font-family: 'DM Sans', sans-serif; cursor: pointer; color: #555; }
+.basket-item .bi-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; padding: 0 2px; transition: color 0.15s; line-height: 1; }
+.basket-item .bi-remove:hover { color: var(--rust); }
+.basket-empty { text-align: center; padding: 28px; color: #bbb; font-size: 13px; border: 2px dashed var(--border); border-radius: 8px; margin-bottom: 16px; }
 
 @media (max-width: 900px) {
   .main-grid { grid-template-columns: 1fr; }
+  .guest-grid { grid-template-columns: 1fr; }
   .hero { grid-template-columns: 1fr; }
   .container { padding: 24px 20px; }
   header { padding: 0 20px; }
   .header-stats { display: none; }
+  .guest-banner { padding: 24px; }
 }
 </style>
 </head>
@@ -522,15 +259,14 @@ select:focus, input:focus {
     </div>
   </div>
 
-  <!-- MAIN GRID -->
+  <!-- ── EXISTING USER SECTION ── -->
   <div class="main-grid">
 
     <!-- LEFT: CONTROL PANEL -->
     <div>
       <div class="panel">
-        <div class="panel-header"><div class="dot"></div>Get Recommendations</div>
+        <div class="panel-header"><div class="dot"></div>Existing User</div>
         <div class="panel-body">
-
           <div class="form-group">
             <label>Select User</label>
             <select id="userSelect">
@@ -540,7 +276,6 @@ select:focus, input:focus {
               {% endfor %}
             </select>
           </div>
-
           <div class="form-group">
             <label>Algorithm</label>
             <div class="algo-pills">
@@ -550,7 +285,6 @@ select:focus, input:focus {
               <button class="pill" data-algo="item_cf">📦 Item-CF</button>
             </div>
           </div>
-
           <div class="form-group">
             <label>Number of Recommendations</label>
             <select id="topNSelect">
@@ -560,13 +294,8 @@ select:focus, input:focus {
               <option value="12">12 products</option>
             </select>
           </div>
-
-          <button class="btn" id="getRecsBtn" onclick="getRecommendations()">
-            ↗ Get Recommendations
-          </button>
-          <button class="btn btn-secondary" onclick="getTrending()">
-            🔥 Show Trending Products
-          </button>
+          <button class="btn" onclick="getRecommendations()">↗ Get Recommendations</button>
+          <button class="btn btn-secondary" onclick="getTrending()">🔥 Show Trending Products</button>
         </div>
       </div>
 
@@ -593,9 +322,7 @@ select:focus, input:focus {
         <div class="panel-header"><div class="dot"></div>Model Evaluation</div>
         <div class="panel-body">
           <p style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.5;">Run Precision@5 evaluation using leave-one-out testing across all models.</p>
-          <button class="btn btn-secondary" onclick="runEvaluation()">
-            📊 Run Evaluation
-          </button>
+          <button class="btn btn-secondary" onclick="runEvaluation()">📊 Run Evaluation</button>
           <div id="evalResults"></div>
         </div>
       </div>
@@ -607,8 +334,6 @@ select:focus, input:focus {
         <div class="tab active" onclick="switchTab('recommendations')">Recommendations</div>
         <div class="tab" onclick="switchTab('history')">User History</div>
       </div>
-
-      <!-- Recommendations Tab -->
       <div class="tab-content active" id="tab-recommendations">
         <div id="recResults">
           <div class="empty-state">
@@ -617,8 +342,6 @@ select:focus, input:focus {
           </div>
         </div>
       </div>
-
-      <!-- History Tab -->
       <div class="tab-content" id="tab-history">
         <div id="historyResults">
           <div class="empty-state">
@@ -628,16 +351,88 @@ select:focus, input:focus {
         </div>
       </div>
     </div>
-
   </div>
-</div>
+
+  <!-- ── GUEST / NEW USER COLD-START SECTION ── -->
+  <div class="guest-section">
+
+    <div class="guest-banner">
+      <h2>New Here? Build Your <em>Interest List</em></h2>
+      <p>Not in our system yet? Tell us what you like — pick products you'd browse, wishlist, or buy — and our Item-CF model will instantly generate recommendations tailored to your taste.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div> Browse the product catalogue</div>
+        <div class="step"><div class="step-num">2</div> Add items you like to your list</div>
+        <div class="step"><div class="step-num">3</div> Set how strong your interest is</div>
+        <div class="step"><div class="step-num">4</div> Get personalised recommendations</div>
+      </div>
+    </div>
+
+    <div class="guest-grid">
+
+      <!-- LEFT: CATALOGUE BROWSER -->
+      <div class="panel">
+        <div class="panel-header" style="background:#2d1a10;"><div class="dot" style="background:var(--rust);"></div>Product Catalogue</div>
+        <div class="panel-body">
+          <input class="search-input" id="catalogueSearch" placeholder="Search products, brands…" oninput="filterCatalogue()" />
+          <div class="cat-filter-pills" id="catFilterPills">
+            <button class="cat-pill active" data-cat="all" onclick="setCatFilter(this,'all')">All</button>
+          </div>
+          <div class="catalogue-list" id="catalogueList">
+            <div class="loading"><div class="spinner"></div> Loading catalogue…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: BASKET + RESULTS -->
+      <div>
+        <div class="panel">
+          <div class="panel-header" style="background:#2d1a10;"><div class="dot" style="background:var(--rust);"></div>Your Interest List</div>
+          <div class="panel-body">
+            <div class="basket-header">
+              <span class="basket-label">Selected Products</span>
+              <span class="basket-count" id="basketCount">0</span>
+            </div>
+            <div class="basket-list" id="basketList">
+              <div class="basket-empty" id="basketEmpty">No products added yet. Browse the catalogue →</div>
+            </div>
+            <div class="form-group">
+              <label>How many recommendations?</label>
+              <select id="guestTopN">
+                <option value="4">4 products</option>
+                <option value="6" selected>6 products</option>
+                <option value="8">8 products</option>
+                <option value="12">12 products</option>
+              </select>
+            </div>
+            <button class="btn btn-rust" onclick="getGuestRecommendations()">✨ Recommend For Me</button>
+            <button class="btn btn-secondary" onclick="clearBasket()">✕ Clear List</button>
+          </div>
+        </div>
+
+        <!-- GUEST RESULTS -->
+        <div id="guestResults" style="margin-top:20px;"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ── STATE ────────────────────────────────────────────────────────────
 let selectedAlgo = 'hybrid';
+let catalogue = [];
+let basket = {};           // { product_id: { meta, interaction } }
+let activeCat = 'all';
+let searchQuery = '';
 
-// Pill toggle
+// ── INIT ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadCatalogue();
+});
+
+// Pill toggle (existing user algo)
 document.querySelectorAll('.pill').forEach(pill => {
   pill.addEventListener('click', () => {
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
@@ -672,29 +467,28 @@ function getCatClass(cat) {
   return '';
 }
 
-function renderProducts(recs, containerId, maxScore) {
+function renderProducts(recs, containerId, showBecause = false) {
   if (!recs || recs.length === 0) {
-    document.getElementById(containerId).innerHTML = `
-      <div class="empty-state"><p>No recommendations found for this selection.</p></div>`;
+    document.getElementById(containerId).innerHTML = `<div class="empty-state"><p>No recommendations found.</p></div>`;
     return;
   }
-  const max = maxScore || Math.max(...recs.map(r => r.score || 1), 1);
-  const html = `<div class="products-grid">` +
+  const max = Math.max(...recs.map(r => r.score || 0), 0.001);
+  document.getElementById(containerId).innerHTML = `<div class="products-grid">` +
     recs.map((r, i) => `
-      <div class="product-card" style="animation-delay:${i * 0.05}s">
+      <div class="product-card" style="animation-delay:${i*0.05}s">
         <span class="cat-tag ${getCatClass(r.category)}">${r.category || 'Product'}</span>
         <div class="pname">${r.product_name || r.product_id}</div>
         <div class="brand">${r.brand || ''}</div>
-        <div class="price">₹${(r.price || 0).toLocaleString('en-IN')} <span>INR</span></div>
-        ${r.score > 0 ? `<div class="score-bar"><div class="score-fill" style="width:${Math.min(100, (r.score/max)*100)}%"></div></div>` : ''}
+        <div class="price">₹${(r.price||0).toLocaleString('en-IN')} <span>INR</span></div>
+        ${r.score > 0 ? `<div class="score-bar"><div class="score-fill" style="width:${Math.min(100,(r.score/max)*100)}%"></div></div>` : ''}
+        ${showBecause && r.because_of ? `<div class="because-badge">💡 Because you liked: <strong>${r.because_of}</strong></div>` : ''}
       </div>`).join('') + `</div>`;
-  document.getElementById(containerId).innerHTML = html;
 }
 
+// ── EXISTING USER ─────────────────────────────────────────────────────
 async function getRecommendations() {
   const userId = document.getElementById('userSelect').value;
   const topN = document.getElementById('topNSelect').value;
-
   if (!userId) { showToast('⚠️ Please select a user first'); return; }
 
   document.getElementById('recResults').innerHTML = `<div class="loading"><div class="spinner"></div> Generating recommendations…</div>`;
@@ -703,114 +497,77 @@ async function getRecommendations() {
   try {
     const res = await fetch(`/api/recommend?user_id=${userId}&algo=${selectedAlgo}&top_n=${topN}`);
     const data = await res.json();
-
     const algoLabels = { hybrid:'Hybrid SVD+CF', svd:'SVD Matrix Factorization', user_cf:'User-Based CF', item_cf:'Item-Based CF' };
-    const max = Math.max(...data.recommendations.map(r => r.score), 0.001);
 
     document.getElementById('recResults').innerHTML = `
       <div class="results-header">
-        <div class="results-title">Recommendations for <em>${userId}</em></div>
-        <span class="algo-badge">${algoLabels[selectedAlgo] || selectedAlgo}</span>
-      </div>`;
+        <div class="results-title">For <em>${userId}</em></div>
+        <span class="algo-badge">${algoLabels[selectedAlgo]||selectedAlgo}</span>
+      </div><div id="recGrid"></div>`;
+    renderProducts(data.recommendations, 'recGrid');
 
-    renderProducts(data.recommendations, 'recResults', max);
-
-    // Prepend header
-    const grid = document.getElementById('recResults').querySelector('.products-grid');
-    const headerDiv = document.createElement('div');
-    headerDiv.innerHTML = `
-      <div class="results-header">
-        <div class="results-title">Recommendations for <em>${userId}</em></div>
-        <span class="algo-badge">${algoLabels[selectedAlgo] || selectedAlgo}</span>
-      </div>`;
-    document.getElementById('recResults').insertBefore(headerDiv.firstChild, grid);
-
-    // History tab
     if (data.history && data.history.length > 0) {
-      const histHtml = `
+      document.getElementById('historyResults').innerHTML = `
         <div class="section-label">Recent Interactions — ${userId}</div>
         <div class="history-list">` +
         data.history.map(h => `
           <div class="history-item">
             <span class="i-type i-${h.interaction_type}">${h.interaction_type}</span>
             <span class="i-name">${h.product_name || h.product_id}</span>
-            <span class="i-date">${h.interaction_date ? h.interaction_date.split('T')[0] : ''}</span>
+            <span class="i-date">${(h.interaction_date||'').split('T')[0]}</span>
           </div>`).join('') + `</div>`;
-      document.getElementById('historyResults').innerHTML = histHtml;
     }
-
     showToast(`✅ ${data.recommendations.length} recommendations loaded`);
   } catch(e) {
-    document.getElementById('recResults').innerHTML = `<div class="empty-state"><p>Error fetching recommendations. Please try again.</p></div>`;
+    document.getElementById('recResults').innerHTML = `<div class="empty-state"><p>Error fetching recommendations.</p></div>`;
   }
 }
 
 async function getTrending() {
   const topN = document.getElementById('topNSelect').value;
-  document.getElementById('recResults').innerHTML = `<div class="loading"><div class="spinner"></div> Loading trending products…</div>`;
+  document.getElementById('recResults').innerHTML = `<div class="loading"><div class="spinner"></div> Loading trending…</div>`;
   switchTab('recommendations');
-
   const res = await fetch(`/api/trending?top_n=${topN}`);
   const data = await res.json();
-
   document.getElementById('recResults').innerHTML = `
     <div class="results-header">
       <div class="results-title">🔥 Trending Products</div>
       <span class="algo-badge">Popularity Based</span>
-    </div>`;
-  renderProducts(data.trending, 'recResults', 1);
-
-  const grid = document.getElementById('recResults').querySelector('.products-grid');
-  const h = document.createElement('div');
-  h.innerHTML = `<div class="results-header" style="margin-bottom:16px;"><div class="results-title">🔥 Trending Products</div><span class="algo-badge">Popularity Based</span></div>`;
-  document.getElementById('recResults').insertBefore(h.firstChild, grid);
+    </div><div id="recGrid"></div>`;
+  renderProducts(data.trending, 'recGrid');
 }
 
 async function getSimilar() {
   const pid = document.getElementById('productSelect').value;
   if (!pid) return;
-
+  document.getElementById('recResults').innerHTML = `<div class="loading"><div class="spinner"></div> Finding similar…</div>`;
+  switchTab('recommendations');
   const res = await fetch(`/api/similar?product_id=${pid}&top_n=6`);
   const data = await res.json();
-
-  const container = document.getElementById('recResults');
-  container.innerHTML = `
+  document.getElementById('recResults').innerHTML = `
     <div class="results-header">
       <div class="results-title">Similar to <em>${pid}</em></div>
       <span class="algo-badge">Content-Based</span>
-    </div>`;
-  renderProducts(data.similar_products, 'recResults', 1);
-
-  const grid = container.querySelector('.products-grid');
-  const h = document.createElement('div');
-  h.innerHTML = `<div class="results-header" style="margin-bottom:16px;"><div class="results-title">Similar to <em>${pid}</em></div><span class="algo-badge">Content-Based</span></div>`;
-  container.insertBefore(h.firstChild, grid);
-
-  switchTab('recommendations');
-  showToast(`✅ Similar products for ${pid} loaded`);
+    </div><div id="recGrid"></div>`;
+  renderProducts(data.similar_products, 'recGrid');
+  showToast(`✅ Similar products for ${pid}`);
 }
 
 async function runEvaluation() {
-  document.getElementById('evalResults').innerHTML = `<div class="loading" style="padding:20px 0;"><div class="spinner"></div> Evaluating models (30–60s)…</div>`;
-
+  document.getElementById('evalResults').innerHTML = `<div class="loading" style="padding:20px 0;"><div class="spinner"></div> Evaluating (30–60s)…</div>`;
   try {
     const res = await fetch('/api/evaluate');
     const data = await res.json();
-    const results = data.evaluation;
-
     let rows = '';
-    Object.entries(results).forEach(([name, info]) => {
+    Object.entries(data.evaluation).forEach(([name, info]) => {
       const pct = Math.round(info.precision_at_5 * 100);
-      rows += `
-        <tr>
-          <td><strong>${name}</strong><br><span style="font-size:11px;color:#888;">${info.description}</span></td>
-          <td>
-            <div class="metric-val">${(info.precision_at_5 * 100).toFixed(1)}%</div>
-            <div class="eval-bar"><div class="eval-bar-fill" style="width:${Math.min(pct * 3, 100)}%"></div></div>
-          </td>
-        </tr>`;
+      rows += `<tr>
+        <td><strong>${name}</strong><br><span style="font-size:11px;color:#888;">${info.description}</span></td>
+        <td>
+          <div class="metric-val">${(info.precision_at_5*100).toFixed(1)}%</div>
+          <div class="eval-bar"><div class="eval-bar-fill" style="width:${Math.min(pct*3,100)}%"></div></div>
+        </td></tr>`;
     });
-
     document.getElementById('evalResults').innerHTML = `
       <table class="eval-table" style="margin-top:16px;">
         <thead><tr><th>Model</th><th>Precision@5</th></tr></thead>
@@ -818,7 +575,191 @@ async function runEvaluation() {
       </table>`;
     showToast('✅ Evaluation complete');
   } catch(e) {
-    document.getElementById('evalResults').innerHTML = `<p style="color:red;font-size:13px;margin-top:12px;">Evaluation failed. Try again.</p>`;
+    document.getElementById('evalResults').innerHTML = `<p style="color:red;font-size:13px;margin-top:12px;">Evaluation failed.</p>`;
+  }
+}
+
+// ── GUEST / COLD-START ─────────────────────────────────────────────────
+
+async function loadCatalogue() {
+  try {
+    const res = await fetch('/api/catalogue');
+    const data = await res.json();
+    catalogue = data.catalogue;
+
+    // Build category filter pills
+    const cats = [...new Set(catalogue.map(p => p.category))].sort();
+    const pillsEl = document.getElementById('catFilterPills');
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-pill';
+      btn.dataset.cat = cat;
+      btn.textContent = cat;
+      btn.onclick = () => setCatFilter(btn, cat);
+      pillsEl.appendChild(btn);
+    });
+
+    renderCatalogue();
+  } catch(e) {
+    document.getElementById('catalogueList').innerHTML = `<p style="color:red;font-size:13px;">Failed to load catalogue.</p>`;
+  }
+}
+
+function setCatFilter(el, cat) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  activeCat = cat;
+  renderCatalogue();
+}
+
+function filterCatalogue() {
+  searchQuery = document.getElementById('catalogueSearch').value.toLowerCase();
+  renderCatalogue();
+}
+
+function renderCatalogue() {
+  const list = document.getElementById('catalogueList');
+  let filtered = catalogue;
+  if (activeCat !== 'all') filtered = filtered.filter(p => p.category === activeCat);
+  if (searchQuery) filtered = filtered.filter(p =>
+    p.product_name.toLowerCase().includes(searchQuery) ||
+    (p.brand||'').toLowerCase().includes(searchQuery) ||
+    p.category.toLowerCase().includes(searchQuery)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:#aaa;padding:20px;font-size:13px;">No products match your search.</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    const inBasket = !!basket[p.product_id];
+    return `
+    <div class="cat-item ${inBasket ? 'added' : ''}" id="ci-${p.product_id}">
+      <div style="flex:1;min-width:0;">
+        <div class="ci-name">${p.product_name}</div>
+        <div class="ci-meta">${p.brand} · ${p.category}</div>
+      </div>
+      <div class="ci-price">₹${(p.price||0).toLocaleString('en-IN')}</div>
+      <button class="ci-add" onclick="toggleBasket('${p.product_id}')" title="${inBasket ? 'Remove' : 'Add to list'}">
+        ${inBasket ? '✓' : '+'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function toggleBasket(pid) {
+  const product = catalogue.find(p => p.product_id === pid);
+  if (!product) return;
+
+  if (basket[pid]) {
+    delete basket[pid];
+    showToast(`Removed ${product.product_name}`);
+  } else {
+    basket[pid] = { meta: product, interaction: 'add_to_cart' };
+    showToast(`Added ${product.product_name} to your list`);
+  }
+  renderCatalogue();
+  renderBasket();
+}
+
+function setInteraction(pid, val) {
+  if (basket[pid]) basket[pid].interaction = val;
+}
+
+function clearBasket() {
+  basket = {};
+  renderCatalogue();
+  renderBasket();
+  document.getElementById('guestResults').innerHTML = '';
+  showToast('List cleared');
+}
+
+function renderBasket() {
+  const keys = Object.keys(basket);
+  document.getElementById('basketCount').textContent = keys.length;
+  const list = document.getElementById('basketList');
+
+  if (keys.length === 0) {
+    list.innerHTML = `<div class="basket-empty" id="basketEmpty">No products added yet. Browse the catalogue →</div>`;
+    return;
+  }
+
+  list.innerHTML = keys.map((pid, i) => {
+    const { meta, interaction } = basket[pid];
+    return `
+    <div class="basket-item" style="animation-delay:${i*0.04}s">
+      <div class="bi-name">${meta.product_name}<br><span style="font-size:10px;color:#999;">${meta.category}</span></div>
+      <select class="bi-type" onchange="setInteraction('${pid}', this.value)">
+        <option value="view" ${interaction==='view'?'selected':''}>👁 View</option>
+        <option value="wishlist" ${interaction==='wishlist'?'selected':''}>❤️ Wishlist</option>
+        <option value="add_to_cart" ${interaction==='add_to_cart'?'selected':''}>🛒 Cart</option>
+        <option value="purchase" ${interaction==='purchase'?'selected':''}>✅ Bought</option>
+      </select>
+      <button class="bi-remove" onclick="toggleBasket('${pid}')" title="Remove">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function getGuestRecommendations() {
+  const keys = Object.keys(basket);
+  if (keys.length === 0) {
+    showToast('⚠️ Add at least one product to your list first');
+    return;
+  }
+
+  const topN = parseInt(document.getElementById('guestTopN').value);
+  const payload = {
+    products: keys.map(pid => ({
+      product_id: pid,
+      interaction: basket[pid].interaction
+    })),
+    top_n: topN
+  };
+
+  document.getElementById('guestResults').innerHTML = `<div class="loading"><div class="spinner"></div> Analysing your preferences…</div>`;
+
+  try {
+    const res = await fetch('/api/guest_recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    // Seed summary
+    const seedHtml = data.valid_seeds.map(s => `
+      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--teal-light);border:1px solid var(--teal);border-radius:8px;padding:4px 10px;font-size:12px;margin:3px;">
+        <span class="cat-tag ${getCatClass(s.category)}" style="margin:0;">${s.category||''}</span>
+        <strong>${s.product_name||s.product_id}</strong>
+        <span style="font-size:10px;color:#666;">(${s.interaction})</span>
+      </span>`).join('');
+
+    document.getElementById('guestResults').innerHTML = `
+      <div class="panel">
+        <div class="panel-header" style="background:#1a7a6e;">
+          <div class="dot" style="background:var(--amber);"></div>
+          YOUR PERSONALISED PICKS
+        </div>
+        <div class="panel-body">
+          <div style="margin-bottom:18px;">
+            <div class="section-label">Based on your interest in</div>
+            <div style="line-height:2;">${seedHtml}</div>
+          </div>
+          <div class="results-header">
+            <div class="results-title">Recommended for You</div>
+            <span class="algo-badge" style="background:#e0f5f2;color:#1a7a6e;">Item-CF Cold Start</span>
+          </div>
+          <div id="guestRecGrid"></div>
+        </div>
+      </div>`;
+    renderProducts(data.recommendations, 'guestRecGrid', true);
+    showToast(`✨ ${data.recommendations.length} personalised recommendations ready!`);
+
+    // Scroll to results
+    document.getElementById('guestResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch(e) {
+    document.getElementById('guestResults').innerHTML = `<div class="empty-state"><p>Error generating recommendations. Please try again.</p></div>`;
   }
 }
 </script>

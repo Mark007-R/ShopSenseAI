@@ -100,3 +100,31 @@ def history(user_id):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
+
+@app.route('/api/guest_recommend', methods=['POST'])
+def guest_recommend():
+    """
+    POST /api/guest_recommend
+    Body: {"products": [{"product_id": "P101", "interaction": "purchase"}, ...], "top_n": 6}
+    Returns recommendations for a brand-new (non-existing) user.
+    """
+    data = request.get_json(force=True)
+    if not data or 'products' not in data:
+        return jsonify({'error': 'products list is required'}), 400
+
+    product_list = [p['product_id'] for p in data['products'] if 'product_id' in p]
+    interaction_types = {p['product_id']: p.get('interaction', 'add_to_cart') for p in data['products']}
+    top_n = int(data.get('top_n', 6))
+
+    if not product_list:
+        return jsonify({'error': 'No valid products provided'}), 400
+
+    result = engine.get_guest_recommendations(product_list, interaction_types, top_n=top_n)
+    return jsonify(result)
+
+
+@app.route('/api/catalogue', methods=['GET'])
+def catalogue():
+    """GET /api/catalogue — Full product list with metadata for guest picker"""
+    return jsonify({'catalogue': engine.get_product_catalogue()})

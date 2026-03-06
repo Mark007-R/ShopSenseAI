@@ -440,3 +440,102 @@ class ProductRecommender:
     def get_trending(self, top_n=6):
         recs = self.trending_model.recommend(top_n=top_n)
         return self._enrich(recs)
+
+    def get_guest_recommendations(self, product_list, interaction_types=None, top_n=6):
+        """
+        Cold-start: recommend for a brand-new user given a list of product_ids
+        they indicate interest in (e.g. from a preference quiz / manual input).
+
+        Strategy — weighted Item-Based CF:
+          1. Build a pseudo user-vector from the supplied products
+             (weight by interaction type if provided, else uniform 3.0)
+          2. Score all other products via item-similarity dot-product
+          3. Exclude the seed products from results
+          4. Return top_n enriched recommendations + explain which seed drove each
+        """
+        if interaction_types is None:
+            interaction_types = {}
+
+        weight_map = {'view': 1.0, 'wishlist': 2.0, 'add_to_cart': 3.0, 'purchase': 5.0}
+
+        # Build pseudo vector (length = number of catalogue products)
+        pseudo_vec = np.zeros(len(self.product_ids))
+        valid_seeds = []
+        for pid in product_list:
+            if pid in self.uim.product_index:
+                idx = self.uim.product_index[pid]
+                w = weight_map.get(interaction_types.get(pid, 'add_to_cart'), 3.0)
+                pseudo_vec[idx] = w
+                valid_seeds.append(pid)
+
+        if not valid_seeds:
+            # Nothing matched — fall back to trending
+            recs = self.trending_model.recommend(top_n=top_n)
+            return {
+                'recommendations': self._enrich(recs, note='trending_fallback'),
+                'valid_seeds': [],
+                'method': 'trending_fallback'
+            }
+
+        # Item-CF scores: each candidate gets sum of similarity × seed weight
+        item_sim = self.item_cf.item_similarity          # shape (n_items, n_items)
+        scores = item_sim.T.dot(pseudo_vec)              # (n_items,)
+
+        # Mask seed products out
+        for pid in valid_seeds:
+            idx = self.uim.product_index[pid]
+            scores[idx] = -np.inf
+
+        top_indices = np.argsort(scores)[::-1][:top_n]
+        raw_recs = [(self.product_ids[i], float(scores[i])) for i in top_indices if scores[i] > -np.inf]
+
+        # Explain: for each recommendation, find which seed product drove it most
+        def top_driver(rec_idx):
+            contribs = {
+                pid: item_sim[self.uim.product_index[pid]][rec_idx] * pseudo_vec[self.uim.product_index[pid]]
+                for pid in valid_seeds
+            }
+            best = max(contribs, key=contribs.get)
+            return best, contribs[best]
+
+        enriched = []
+        for pid, score in raw_recs:
+            meta = self.preprocessor.get_product_meta(pid)
+            rec_idx = self.uim.product_index[pid]
+            driver_pid, driver_score = top_driver(rec_idx)
+            driver_meta = self.preprocessor.get_product_meta(driver_pid)
+            enriched.append({
+                'product_id': pid,
+                'product_name': meta.get('product_name', pid),
+                'category': meta.get('category', ''),
+                'brand': meta.get('brand', ''),
+                'price': meta.get('listed_price_inr', 0),
+                'score': round(score, 4),
+                'because_of': driver_meta.get('product_name', driver_pid),
+                'because_of_id': driver_pid,
+                'note': 'guest_item_cf'
+            })
+
+        return {
+            'recommendations': enriched,
+            'valid_seeds': [
+                {**self.preprocessor.get_product_meta(p), 'product_id': p,
+                 'interaction': interaction_types.get(p, 'add_to_cart')}
+                for p in valid_seeds
+            ],
+            'method': 'item_cf_cold_start'
+        }
+
+    def get_product_catalogue(self):
+        """Return full product list with metadata for the guest picker UI"""
+        result = []
+        for pid in self.product_ids:
+            meta = self.preprocessor.get_product_meta(pid)
+            result.append({
+                'product_id': pid,
+                'product_name': meta.get('product_name', pid),
+                'category': meta.get('category', ''),
+                'brand': meta.get('brand', ''),
+                'price': meta.get('listed_price_inr', 0),
+            })
+        return sorted(result, key=lambda x: x['category'])
