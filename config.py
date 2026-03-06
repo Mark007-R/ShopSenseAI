@@ -1,4 +1,4 @@
-DATA_PATH = "product_recommendation_dataset_v2.csv"
+DATA_PATH = "datasets/product_recommendation_dataset_v2.csv"
 DEFAULT_METHOD = "hybrid"
 DEFAULT_N_RECOMMENDATIONS = 20
 DEFAULT_N_SIMILAR_USERS = 10
