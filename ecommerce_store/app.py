@@ -263,7 +263,9 @@ def cart_page():
         return
     
     for item in cart_items:
-        image_url = item['image_url'] + "&auto=format&fit=crop&w=200&q=80"
+        image_url = item['image_url']
+        if "unsplash" in image_url.lower():
+            image_url += "&auto=format&fit=crop&w=200&q=80" if "?" in image_url else "?auto=format&fit=crop&w=200&q=80"
         
         col1, col2, col3, col4 = st.columns([1, 2, 1, 1])
         
@@ -271,7 +273,7 @@ def cart_page():
             st.markdown(f"""
                 <img src='{image_url}' 
                      style='width: 100px; height: 100px; object-fit: cover; border-radius: 8px;' 
-                     onerror=\"this.src='https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&auto=format&fit=crop&q=80'\"/>
+                     onerror="this.src='https://via.placeholder.com/100x100/1a1a1a/1DB954?text={item['brand']}'" />
             """, unsafe_allow_html=True)
         
         with col2:

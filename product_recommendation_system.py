@@ -225,51 +225,64 @@ class ProductRecommendationSystem:
     def content_based_filtering(
         self, user_id: str, n_recommendations: int = DEFAULT_N_RECOMMENDATIONS
     ) -> List[Dict]:
-        if user_id not in self.data['user_id'].values:
-            return self._get_popular_products(n_recommendations)
+        """Optimized content-based filtering with vectorized operations."""
+        # Get user interactions
+        user_mask = self.data['user_id'] == user_id
+        user_interactions = self.data[user_mask]
         
-        user_interactions = self.data[self.data['user_id'] == user_id]
         if len(user_interactions) == 0:
             return self._get_popular_products(n_recommendations)
         
+        # Get preferences
         pref_categories = user_interactions['category'].value_counts().head(3).index.tolist()
         pref_brands = user_interactions['brand'].value_counts().head(3).index.tolist()
         interacted_products = set(user_interactions['product_id'].unique())
-        candidate_products = self.data[
-            (self.data['category'].isin(pref_categories)) |
-            (self.data['brand'].isin(pref_brands))
-        ].copy()
+        
+        # Vectorized scoring
         recommendations = {}
-        for product_id in candidate_products['product_id'].unique():
-            if product_id not in interacted_products:
-                product_data = candidate_products[candidate_products['product_id'] == product_id]
-                cat_match = product_data['category'].isin(pref_categories).sum() / max(len(pref_categories), 1)
-                brand_match = product_data['brand'].isin(pref_brands).sum() / max(len(pref_brands), 1)
-                rating_score = (product_data['rating'].mean() / 5.0) if not pd.isna(product_data['rating'].mean()) else 0
-                score = (cat_match * 0.4 + brand_match * 0.3 + rating_score * 0.3)
+        
+        for product_id, product_data in self.product_features.iterrows():
+            if product_id in interacted_products:
+                continue
+            
+            cat_match = 1.0 if product_data['category'] in pref_categories else 0.0
+            brand_match = 1.0 if product_data['brand'] in pref_brands else 0.0
+            rating_score = (product_data['rating'] / 5.0) if pd.notna(product_data['rating']) else 0.0
+            
+            score = (cat_match * 0.4 + brand_match * 0.3 + rating_score * 0.3)
+            if score > 0:
                 recommendations[product_id] = score
+        
         return self._format_recommendations(recommendations, n_recommendations)
     
     def hybrid_recommendation(
         self, user_id: str, n_recommendations: int = DEFAULT_N_RECOMMENDATIONS,
         weights: Dict[str, float] = None
     ) -> List[Dict]:
+        """Optimized hybrid recommendation combining multiple methods."""
         if weights is None:
             weights = HYBRID_WEIGHTS
         
+        # Get recommendations from each method
         collab_user = self.collaborative_filtering_user_based(user_id, n_recommendations)
         collab_item = self.collaborative_filtering_item_based(user_id, n_recommendations)
         content = self.content_based_filtering(user_id, n_recommendations)
+        
+        # Combine scores
         combined_scores = {}
+        
         for rec in collab_user:
             product_id = rec['product_id']
             combined_scores[product_id] = combined_scores.get(product_id, 0) + rec['score'] * weights['collaborative_user']
+        
         for rec in collab_item:
             product_id = rec['product_id']
             combined_scores[product_id] = combined_scores.get(product_id, 0) + rec['score'] * weights['collaborative_item']
+        
         for rec in content:
             product_id = rec['product_id']
             combined_scores[product_id] = combined_scores.get(product_id, 0) + rec['score'] * weights['content_based']
+        
         return self._format_recommendations(combined_scores, n_recommendations)
 
     def recommend_for_new_user(
