@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-"""
-QUICK START GUIDE - Product Recommendation System
-==================================================
-
-This script runs an interactive recommendation flow.
-"""
-
 from product_recommendation_system import ProductRecommendationSystem
 from config import (
     DATA_PATH,
@@ -52,11 +44,9 @@ def _print_recommendations(result: dict) -> None:
         f"method='{result['method']}' | top={result['count']}"
     )
     print("=" * 90)
-
     if not result['recommendations']:
         print("No recommendations found.")
         return
-
     print(f"{'Rank':<6}{'Product ID':<15}{'Product Name':<42}{'Category':<20}{'Score':<8}")
     print("-" * 90)
     for idx, rec in enumerate(result['recommendations'], 1):
@@ -82,10 +72,8 @@ def main():
         data_path=DATA_PATH,
         min_purchase_threshold=MIN_PURCHASE_THRESHOLD,
     )
-
     print("\nInteractive recommendation mode")
     user_mode = _prompt_user_mode()
-
     if user_mode == "new":
         entered_items = _prompt_new_user_items()
         result = rec_system.recommend_for_new_user(
@@ -97,25 +85,20 @@ def main():
     else:
         user_id = _prompt_user_id(rec_system)
         method = _prompt_method()
-
         request_kwargs = {}
         if method == "hybrid":
             request_kwargs["weights"] = HYBRID_WEIGHTS
-
         result = rec_system.get_recommendations(
             user_id=user_id,
             method=method,
             n_recommendations=DEFAULT_N_RECOMMENDATIONS,
             **request_kwargs,
         )
-
     _print_recommendations(result)
-
     save_choice = input("\nSave these recommendations to CSV? [y/N]: ").strip().lower()
     if save_choice == "y":
         if user_mode == "new":
             import pandas as pd
-
             output_path = "recommendations_new_user.csv"
             output_df = pd.DataFrame(result.get('recommendations', []))
             output_df.to_csv(output_path, index=False)
