@@ -124,7 +124,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 8px; font-size: 13px; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; }
 .toast.show { transform: translateY(0); opacity: 1; }
 
-/* ── GUEST SECTION ── */
 .guest-section { margin-top: 56px; border-top: 2px dashed var(--border); padding-top: 44px; }
 .guest-banner { background: linear-gradient(135deg, #1c1c1c 0%, #2d1a10 100%); color: var(--paper); border-radius: 16px; padding: 36px 44px; margin-bottom: 32px; position: relative; overflow: hidden; }
 .guest-banner::before { content: ''; position: absolute; right: -40px; bottom: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(201,79,44,0.25) 0%, transparent 70%); }
@@ -195,7 +194,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
 
 <div class="container">
 
-  <!-- HERO -->
   <div class="hero">
     <div>
       <h1>Smart Product<br><em>Recommendations</em><br>Engine</h1>
@@ -209,7 +207,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
     </div>
   </div>
 
-  <!-- EXISTING USER -->
   <div class="main-grid">
     <div>
       <div class="panel">
@@ -294,7 +291,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
     </div>
   </div>
 
-  <!-- GUEST / NEW USER SECTION -->
   <div class="guest-section">
     <div class="guest-banner">
       <h2>New Here? Build Your <em>Interest List</em></h2>
@@ -308,7 +304,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
     </div>
 
     <div class="guest-grid">
-      <!-- CATALOGUE -->
       <div class="panel">
         <div class="panel-header" style="background:#2d1a10;"><div class="dot" style="background:var(--rust);"></div>Product Catalogue</div>
         <div class="panel-body">
@@ -322,7 +317,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
         </div>
       </div>
 
-      <!-- BASKET + RESULTS -->
       <div>
         <div class="panel">
           <div class="panel-header" style="background:#2d1a10;"><div class="dot" style="background:var(--rust);"></div>Your Interest List</div>
@@ -357,7 +351,6 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--teal);
 <div class="toast" id="toast"></div>
 
 <script>
-// ── UTILITIES ─────────────────────────────────────────────────────────
 function esc(str) {
   const d = document.createElement('div');
   d.textContent = String(str || '');
@@ -419,7 +412,6 @@ function renderProductGrid(recs, containerId, showBecause) {
   el.appendChild(grid);
 }
 
-// ── EXISTING USER ─────────────────────────────────────────────────────
 let selectedAlgo = 'hybrid';
 
 document.querySelectorAll('.pill').forEach(pill => {
@@ -501,7 +493,6 @@ document.getElementById('evalBtn').addEventListener('click', async () => {
     const ev = data.evaluation;
     const meta = ev['_meta'] || {};
 
-    // method note
     let metaHtml = '';
     if (meta.method) {
       metaHtml = `<div style="margin-top:14px;padding:10px 12px;background:var(--teal-light);border-radius:8px;font-size:11px;color:#1a5c52;line-height:1.6;">
@@ -539,9 +530,8 @@ document.getElementById('evalBtn').addEventListener('click', async () => {
   }
 });
 
-// ── GUEST / COLD-START ─────────────────────────────────────────────────
 let catalogue = [];
-let basket = {};      // { pid: { meta, interaction } }
+let basket = {};
 let activeCat = 'all';
 
 document.addEventListener('DOMContentLoaded', loadCatalogue);
@@ -552,7 +542,6 @@ async function loadCatalogue() {
     const data = await res.json();
     catalogue = data.catalogue;
 
-    // Build category pills dynamically
     const cats = [...new Set(catalogue.map(p => p.category))].sort();
     const pillsEl = document.getElementById('catFilterPills');
     cats.forEach(cat => {
@@ -569,7 +558,6 @@ async function loadCatalogue() {
   }
 }
 
-// Single delegated listener for ALL pills (including the static "All" button)
 document.getElementById('catFilterPills').addEventListener('click', (e) => {
   const pill = e.target.closest('.cat-pill');
   if (!pill) return;
@@ -742,7 +730,6 @@ document.getElementById('guestRecommendBtn').addEventListener('click', async () 
     });
     const data = await res.json();
 
-    // Build seed chips
     const seedContainer = document.createElement('div');
     seedContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;';
     data.valid_seeds.forEach(s => {
