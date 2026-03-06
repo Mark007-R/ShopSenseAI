@@ -1,25 +1,16 @@
-"""
-Flask Web Application — Product Recommendation System
-Replace your existing app.py with this file entirely.
-"""
-
 from flask import Flask, request, jsonify, render_template
 import os
 import time
 
 app = Flask(__name__)
 
-# ── Load recommender on startup ──────────────────────────────────────────────
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'product_recommendation_dataset_v2.csv')
 
-print("⏳ Initializing recommendation engine...")
+print("Initializing recommendation engine...")
 t0 = time.time()
 from recommender import ProductRecommender
 engine = ProductRecommender(DATA_PATH)
-print(f"✅ Engine ready in {time.time() - t0:.2f}s")
-
-
-# ── ROUTES ───────────────────────────────────────────────────────────────────
+print(f"Engine ready in {time.time() - t0:.2f}s")
 
 @app.route('/')
 def index():
@@ -95,9 +86,8 @@ def catalogue():
     return jsonify({'catalogue': engine.get_product_catalogue()})
 
 
-# ── STARTUP SELF-CHECK ───────────────────────────────────────────────────────
 if __name__ == '__main__':
-    print("\n📋 Registered routes:")
+    print("\nRegistered routes:")
     for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
         print(f"   {rule.rule}")
     print()
