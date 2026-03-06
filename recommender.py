@@ -1,8 +1,3 @@
-"""
-Product Recommendation Engine
-Pipeline: Dataset → Preprocessing → User-Item Matrix → Algorithm → Training → Evaluation
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -13,9 +8,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-# ─────────────────────────────────────────────
-# STEP 1: DATA PREPROCESSING
-# ─────────────────────────────────────────────
 class DataPreprocessor:
     def __init__(self, filepath):
         self.filepath = filepath
@@ -25,14 +17,11 @@ class DataPreprocessor:
     def load_and_clean(self):
         df = pd.read_csv(self.filepath)
 
-        # Drop duplicates
         df = df.drop_duplicates()
 
-        # Fill missing ratings with 0 (unrated)
         df['rating'] = df['rating'].fillna(0)
         df['satisfaction_score'] = df['satisfaction_score'].fillna(0)
 
-        # Encode interaction_type as numeric weight
         interaction_weights = {
             'view': 1,
             'wishlist': 2,
@@ -41,7 +30,6 @@ class DataPreprocessor:
         }
         df['interaction_score'] = df['interaction_type'].map(interaction_weights)
 
-        # Boost score for purchases with high rating
         df['engagement_score'] = (
             df['interaction_score'] * 1.0
             + df['rating'] * 0.5
@@ -50,12 +38,10 @@ class DataPreprocessor:
         )
         df['engagement_score'] = df['engagement_score'].clip(lower=0)
 
-        # Parse date
         df['interaction_date'] = pd.to_datetime(df['interaction_date'])
 
         self.df = df
 
-        # Build product metadata lookup
         self.product_meta = (
             df[['product_id', 'product_name', 'category', 'brand', 'listed_price_inr']]
             .drop_duplicates('product_id')
@@ -70,9 +56,6 @@ class DataPreprocessor:
         return {}
 
 
-# ─────────────────────────────────────────────
-# STEP 2: USER-ITEM MATRIX
-# ─────────────────────────────────────────────
 class UserItemMatrix:
     def __init__(self, df):
         self.df = df
@@ -83,7 +66,6 @@ class UserItemMatrix:
         self.product_index = {}
 
     def build(self):
-        # Aggregate engagement score per user-product pair
         agg = (
             self.df.groupby(['user_id', 'product_id'])['engagement_score']
             .sum()
@@ -104,11 +86,7 @@ class UserItemMatrix:
         return csr_matrix(self.matrix)
 
 
-# ─────────────────────────────────────────────
-# STEP 3 & 4: RECOMMENDATION ALGORITHMS + TRAINING
-# ─────────────────────────────────────────────
 class CollaborativeFilteringModel:
-    """SVD-based Matrix Factorization (Model-based CF)"""
 
     def __init__(self, n_factors=20):
         self.n_factors = n_factors
@@ -121,7 +99,6 @@ class CollaborativeFilteringModel:
         sparse = csr_matrix(matrix.astype(float))
         k = min(self.n_factors, min(sparse.shape) - 1)
         self.U, self.sigma, self.Vt = svds(sparse, k=k)
-        # Reconstruct predicted ratings
         sigma_diag = np.diag(self.sigma)
         self.predicted_matrix = np.dot(np.dot(self.U, sigma_diag), self.Vt)
         return self
@@ -129,8 +106,7 @@ class CollaborativeFilteringModel:
     def recommend(self, user_idx, product_ids, user_item_row, top_n=5):
         if self.predicted_matrix is None:
             return []
-        scores = self.predicted_matrix[user_idx].copy()   # copy — never mutate predicted_matrix
-        # Exclude already interacted products
+        scores = self.predicted_matrix[user_idx].copy()
         interacted = np.where(user_item_row > 0)[0]
         scores[interacted] = -np.inf
         top_indices = np.argsort(scores)[::-1][:top_n]
@@ -138,7 +114,6 @@ class CollaborativeFilteringModel:
 
 
 class UserBasedCF:
-    """User-Based Collaborative Filtering using cosine similarity"""
 
     def __init__(self):
         self.similarity_matrix = None
@@ -153,9 +128,8 @@ class UserBasedCF:
         if self.similarity_matrix is None:
             return []
         sim_scores = self.similarity_matrix[user_idx].copy()
-        sim_scores[user_idx] = 0  # exclude self
+        sim_scores[user_idx] = 0
         top_users = np.argsort(sim_scores)[::-1][:20]
-        # Weighted sum of neighbor interactions
         weighted = np.zeros(len(product_ids))
         weight_sum = 0
         for neighbor in top_users:
@@ -164,7 +138,6 @@ class UserBasedCF:
             weight_sum += w
         if weight_sum > 0:
             weighted /= weight_sum
-        # Use masked_row if provided (evaluation), else fall back to trained row
         exclude_vec = masked_row if masked_row is not None else self.matrix[user_idx]
         interacted = np.where(exclude_vec > 0)[0]
         weighted[interacted] = -np.inf
@@ -173,7 +146,6 @@ class UserBasedCF:
 
 
 class ItemBasedCF:
-    """Item-Based Collaborative Filtering"""
 
     def __init__(self):
         self.item_similarity = None
@@ -194,7 +166,6 @@ class ItemBasedCF:
 
 
 class ContentBasedModel:
-    """Content-Based Filtering using product category/brand features"""
 
     def __init__(self, df, product_ids):
         self.df = df
@@ -233,14 +204,12 @@ class ContentBasedModel:
 
 
 class TrendingModel:
-    """Popularity-based fallback (trending products)"""
 
     def __init__(self, df):
         self.df = df
         self.trending = []
 
     def train(self):
-        # Recent 90 days weighted score
         recent = self.df[self.df['interaction_date'] >= self.df['interaction_date'].max() - pd.Timedelta(days=90)]
         weights = {'view': 1, 'wishlist': 2, 'add_to_cart': 3, 'purchase': 5}
         recent = recent.copy()
@@ -255,27 +224,7 @@ class TrendingModel:
         return [(pid, 0.0) for pid in self.trending if pid not in exclude_ids][:top_n]
 
 
-# ─────────────────────────────────────────────
-# STEP 5: EVALUATION  (Temporal Train / Test Split)
-# ─────────────────────────────────────────────
 class Evaluator:
-    """
-    Proper offline evaluation using an 80/20 temporal split.
-
-    Why temporal split instead of leave-one-out (LOO)?
-    ────────────────────────────────────────────────────
-    LOO on a pre-trained similarity/SVD matrix suffers from look-ahead bias:
-    the model was trained on the FULL matrix including the held-out item, so
-    neighbours were partly chosen *because* they share that item — making it
-    trivially easy to predict back (User-CF inflates to ~92%, meaningless).
-
-    A temporal split avoids this completely:
-      • Models are retrained on the TRAIN portion only (interactions before cutoff)
-      • Ground-truth is items the user interacted with AFTER the cutoff
-        that were NOT already in their training history
-      • Precision@K = fraction of users for whom ≥1 recommended item
-        appears in their future ground-truth set
-    """
 
     def __init__(self, df, product_ids):
         self.df = df
@@ -291,7 +240,6 @@ class Evaluator:
         train_df = df[df['interaction_date'] <= cutoff]
         test_df  = df[df['interaction_date'] > cutoff]
 
-        # Build train matrix
         agg = train_df.groupby(['user_id', 'product_id'])['engagement_score'].sum().reset_index()
         pivot = agg.pivot(index='user_id', columns='product_id',
                           values='engagement_score').fillna(0)
@@ -301,7 +249,6 @@ class Evaluator:
         self.train_user_ids = list(pivot.index)
         self.train_user_idx = {u: i for i, u in enumerate(self.train_user_ids)}
 
-        # Build test ground truth: unseen items per user after cutoff
         agg_test = test_df.groupby(['user_id', 'product_id'])['engagement_score'].sum().reset_index()
         self.test_gt = {}
         for _, row in agg_test.iterrows():
@@ -310,11 +257,10 @@ class Evaluator:
                 continue
             uidx = self.train_user_idx[uid]
             pidx = self.product_ids.index(pid)
-            if self.train_matrix[uidx][pidx] == 0:          # truly unseen during training
+            if self.train_matrix[uidx][pidx] == 0:
                 self.test_gt.setdefault(uid, set()).add(pid)
 
     def _retrain_and_score(self, ModelClass, model_kwargs, k, sample_size, seed):
-        """Retrain a fresh model on train-only data, then evaluate."""
         model = ModelClass(**model_kwargs).train(self.train_matrix)
         np.random.seed(seed)
         users = list(self.test_gt.keys())
@@ -370,9 +316,6 @@ class Evaluator:
         return results
 
 
-# ─────────────────────────────────────────────
-# MASTER RECOMMENDER (orchestrates all models)
-# ─────────────────────────────────────────────
 class ProductRecommender:
     def __init__(self, filepath):
         self.filepath = filepath
@@ -380,18 +323,15 @@ class ProductRecommender:
         self._build()
 
     def _build(self):
-        # Step 1: Preprocess
         self.preprocessor = DataPreprocessor(self.filepath)
         self.df = self.preprocessor.load_and_clean()
 
-        # Step 2: Build matrix
         self.uim = UserItemMatrix(self.df)
         self.pivot = self.uim.build()
         self.matrix = self.uim.matrix
         self.user_ids = self.uim.user_ids
         self.product_ids = self.uim.product_ids
 
-        # Step 3 & 4: Train models
         self.svd_model = CollaborativeFilteringModel(n_factors=20).train(self.matrix)
         self.user_cf = UserBasedCF().train(self.matrix)
         self.item_cf = ItemBasedCF().train(self.matrix)
@@ -401,9 +341,7 @@ class ProductRecommender:
         self.is_trained = True
 
     def get_recommendations(self, user_id, algo='hybrid', top_n=6):
-        """Main recommendation endpoint"""
         if user_id not in self.uim.user_index:
-            # Cold-start: return trending
             recs = self.trending_model.recommend(top_n=top_n)
             return self._enrich(recs, note='trending')
 
@@ -417,7 +355,6 @@ class ProductRecommender:
         elif algo == 'item_cf':
             recs = self.item_cf.recommend(uid, self.product_ids, top_n=top_n)
         elif algo == 'hybrid':
-            # Weighted combination: SVD + Item-CF
             svd_recs = dict(self.svd_model.recommend(uid, self.product_ids, user_row.copy(), top_n=top_n * 2))
             item_recs = dict(self.item_cf.recommend(uid, self.product_ids, top_n=top_n * 2))
             all_pids = set(svd_recs) | set(item_recs)
@@ -429,7 +366,6 @@ class ProductRecommender:
             recs = self.trending_model.recommend(top_n=top_n)
 
         if not recs:
-            # fallback
             interacted = [self.product_ids[i] for i in np.where(user_row > 0)[0]]
             recs = self.trending_model.recommend(exclude_ids=interacted, top_n=top_n)
             return self._enrich(recs, note='trending_fallback')
@@ -477,7 +413,7 @@ class ProductRecommender:
         }
 
     def get_all_users(self):
-        return self.user_ids[:200]  # return first 200 for dropdown
+        return self.user_ids[:200]
 
     def get_all_products(self):
         return self.product_ids
@@ -487,23 +423,11 @@ class ProductRecommender:
         return self._enrich(recs)
 
     def get_guest_recommendations(self, product_list, interaction_types=None, top_n=6):
-        """
-        Cold-start: recommend for a brand-new user given a list of product_ids
-        they indicate interest in (e.g. from a preference quiz / manual input).
-
-        Strategy — weighted Item-Based CF:
-          1. Build a pseudo user-vector from the supplied products
-             (weight by interaction type if provided, else uniform 3.0)
-          2. Score all other products via item-similarity dot-product
-          3. Exclude the seed products from results
-          4. Return top_n enriched recommendations + explain which seed drove each
-        """
         if interaction_types is None:
             interaction_types = {}
 
         weight_map = {'view': 1.0, 'wishlist': 2.0, 'add_to_cart': 3.0, 'purchase': 5.0}
 
-        # Build pseudo vector (length = number of catalogue products)
         pseudo_vec = np.zeros(len(self.product_ids))
         valid_seeds = []
         for pid in product_list:
@@ -514,7 +438,6 @@ class ProductRecommender:
                 valid_seeds.append(pid)
 
         if not valid_seeds:
-            # Nothing matched — fall back to trending
             recs = self.trending_model.recommend(top_n=top_n)
             return {
                 'recommendations': self._enrich(recs, note='trending_fallback'),
@@ -522,11 +445,9 @@ class ProductRecommender:
                 'method': 'trending_fallback'
             }
 
-        # Item-CF scores: each candidate gets sum of similarity × seed weight
-        item_sim = self.item_cf.item_similarity          # shape (n_items, n_items)
-        scores = item_sim.T.dot(pseudo_vec)              # (n_items,)
+        item_sim = self.item_cf.item_similarity
+        scores = item_sim.T.dot(pseudo_vec)
 
-        # Mask seed products out
         for pid in valid_seeds:
             idx = self.uim.product_index[pid]
             scores[idx] = -np.inf
@@ -534,7 +455,6 @@ class ProductRecommender:
         top_indices = np.argsort(scores)[::-1][:top_n]
         raw_recs = [(self.product_ids[i], float(scores[i])) for i in top_indices if scores[i] > -np.inf]
 
-        # Explain: for each recommendation, find which seed product drove it most
         def top_driver(rec_idx):
             contribs = {
                 pid: item_sim[self.uim.product_index[pid]][rec_idx] * pseudo_vec[self.uim.product_index[pid]]
@@ -572,7 +492,6 @@ class ProductRecommender:
         }
 
     def get_product_catalogue(self):
-        """Return full product list with metadata for the guest picker UI"""
         result = []
         for pid in self.product_ids:
             meta = self.preprocessor.get_product_meta(pid)
