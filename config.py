@@ -1,8 +1,10 @@
-DATA_PATH = "dbfs:/FileStore/datasets/product_recommendation_dataset_v2.csv"
-LOCAL_DATA_PATH = "datasets/product_recommendation_dataset_v2.csv"
-OUTPUT_PATH = "dbfs:/FileStore/recommendations/output"
-ALS_RANK = 10
-ALS_MAX_ITER = 10
-ALS_REG_PARAM = 0.01
-ALS_ALPHA = 1.0
+DATA_PATH = "datasets/product_recommendation_dataset_v2.csv"
+DEFAULT_METHOD = "hybrid"
 DEFAULT_N_RECOMMENDATIONS = 20
+DEFAULT_N_SIMILAR_USERS = 10
+HYBRID_WEIGHTS = {
+    "collaborative_user": 0.3,
+    "collaborative_item": 0.3,
+    "content_based": 0.4,
+}
+MIN_PURCHASE_THRESHOLD = 1

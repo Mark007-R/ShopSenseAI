@@ -1,106 +1,217 @@
-# Databricks Product Recommendation System
+# Product Recommendation System
 
-ALS-based collaborative filtering recommendation system for Databricks platform.
+## Overview
 
-## Features
+A production-grade hybrid recommendation system combining collaborative filtering and content-based filtering for e-commerce product recommendations. Features an interactive **Streamlit web interface** with real-time analytics and percentage-based confidence scores.
 
-- **ALS Collaborative Filtering**: Scalable matrix factorization using Spark MLlib
-- **Batch Processing**: Generate recommendations for all users efficiently
-- **DBFS Integration**: Direct read/write to Databricks File System
-- **Delta Lake Output**: Save recommendations in Delta format
-- **PySpark Optimized**: Leverages Spark's distributed computing
+## Key Features
 
-## Setup
+- **Interactive Streamlit Web UI** with professional design
+- **Confidence Percentage Scores** for all recommendations
+- **Multiple Recommendation Algorithms**:
+  - User-Based Collaborative Filtering
+  - Item-Based Collaborative Filtering
+  - Content-Based Filtering (TF-IDF)
+  - Hybrid Approach with configurable weights
+- **Cold-Start Handling** for new users
+- **Batch Processing** with progress tracking
+- **Real-time Analytics Dashboard**
+- **Interactive Visualizations** using Plotly
+- **Performance Monitoring** and caching
+- **Error Handling** and logging
+- **Export Capabilities** (CSV downloads)
 
-### 1. Upload Dataset to DBFS
+## Installation
 
-```python
-dbutils.fs.mkdirs("dbfs:/FileStore/datasets/")
-dbutils.fs.cp("file:/path/to/product_recommendation_dataset_v2.csv", 
-              "dbfs:/FileStore/datasets/product_recommendation_dataset_v2.csv")
+Clone the repository and install dependencies:
+
+```bash
+git clone <repository-url>
+cd Hackathon-Cloudfronts
+pip install -r requirements.txt
 ```
 
-### 2. Import Notebook
+Or install manually:
+```bash
+pip install pandas numpy scikit-learn scipy streamlit plotly
+```
 
-- Upload `Databricks_Recommendation_Notebook.ipynb` to your Databricks workspace
-- Or upload `databricks_recommendation_system.py` and `databricks_main.py`
+## Usage
 
-### 3. Run
+### Web Application (Recommended)
 
-Open the notebook and execute all cells, or run:
+Launch the interactive Streamlit interface:
+
+```bash
+streamlit run app.py
+```
+
+Or use the batch file:
+```bash
+run_app.bat
+```
+
+The application will open in your browser at `http://localhost:8501`
+
+### Application Features
+
+#### 1. Smart Recommendations Tab
+- Get personalized recommendations for existing users
+- Generate recommendations for new users based on preferences
+- View confidence percentage scores
+- Interactive dual-axis charts showing scores and confidence
+- Real-time processing time metrics
+- Export results to CSV
+
+#### 2. Batch Processing Tab
+- Process multiple users simultaneously
+- Configurable recommendation counts
+- Progress tracking
+- Confidence score distribution analysis
+- Batch export functionality
+
+#### 3. Analytics Dashboard
+- Dataset statistics and insights
+- Interactive charts:
+  - Interaction type distribution
+  - User segment analysis
+  - Top categories and brands
+- Raw data browser with column selection
+
+#### 4. System Info Tab
+- System performance metrics
+- Configuration details
+- Dataset information
+- Algorithm method descriptions
+
+### Command Line Interface
+
+For quick CLI access:
+
+```bash
+python QUICKSTART.py
+```
+
+### Python API
 
 ```python
-%run ./databricks_main
+from product_recommendation_system import ProductRecommendationSystem
+import config
+
+rec_system = ProductRecommendationSystem(config.DATA_PATH)
+
+result = rec_system.get_recommendations(
+    user_id='U00001', 
+    method='hybrid', 
+    n_recommendations=10
+)
+
+for rec in result['recommendations']:
+    print(f"{rec['product_name']}: {rec['score']:.4f} (Confidence: {rec.get('normalized_score', 0):.2f}%)")
 ```
 
 ## Configuration
 
-Edit `config.py` for customization:
-
-- `DATA_PATH`: DBFS path to dataset
-- `OUTPUT_PATH`: DBFS path for batch recommendations
-- `ALS_RANK`: Model latent factors (default: 10)
-- `ALS_MAX_ITER`: Training iterations (default: 10)
-- `ALS_REG_PARAM`: Regularization (default: 0.01)
-- `DEFAULT_N_RECOMMENDATIONS`: Recommendations per user (default: 20)
-
-## Usage
-
-### Interactive Mode
+Edit `config.py` to customize system behavior:
 
 ```python
-from databricks_recommendation_system import DatabricksRecommendationSystem
-import config
-
-rec_system = DatabricksRecommendationSystem()
-df = rec_system.load_data(config.DATA_PATH)
-interactions_df = rec_system.preprocess_interactions(df)
-model = rec_system.build_als_model(interactions_df)
-
-# Get recommendations for specific users
-user_recs = rec_system.get_user_recommendations(["USER_12345"], 10)
-display(user_recs)
+DATA_PATH = "datasets/product_recommendation_dataset_v2.csv"
+DEFAULT_METHOD = "hybrid"
+DEFAULT_N_RECOMMENDATIONS = 20
+DEFAULT_N_SIMILAR_USERS = 10
+HYBRID_WEIGHTS = {
+    "collaborative_user": 0.3,
+    "collaborative_item": 0.3,
+    "content_based": 0.4,
+}
+MIN_PURCHASE_THRESHOLD = 1
 ```
 
-### Batch Mode
+## Project Structure
 
-```python
-# Generate recommendations for all users
-batch_recs = rec_system.generate_batch_recommendations(
-    interactions_df,
-    num_recommendations=20,
-    output_path=config.OUTPUT_PATH
-)
+```
+Hackathon-Cloudfronts/
+├── app.py                              Main Streamlit application
+├── product_recommendation_system.py    Core recommendation engine
+├── config.py                           Configuration settings
+├── QUICKSTART.py                       CLI interface
+├── requirements.txt                    Python dependencies
+├── README.md                           Documentation
+├── run_app.bat                         Windows launcher
+├── datasets/                           Dataset folder
+│   └── product_recommendation_dataset_v2.csv
+└── backup/                             Backup files
 ```
 
-## File Structure
+## Recommendation Algorithms
 
-- `databricks_recommendation_system.py`: Core ALS recommendation engine
-- `Databricks_Recommendation_Notebook.ipynb`: Interactive notebook
-- `databricks_main.py`: Automated pipeline script
-- `config.py`: Configuration settings
-- `requirements.txt`: Dependencies (PySpark 3.3+)
-- `datasets/`: Sample dataset folder
+### User-Based Collaborative Filtering
+- Identifies similar users based on interaction patterns
+- Uses cosine similarity for user comparison
+- Recommends products preferred by similar users
 
-## Model Details
+### Item-Based Collaborative Filtering
+- Finds similar products based on user interactions
+- Uses cosine similarity for product comparison
+- Recommends items similar to user's previous choices
 
-**ALS (Alternating Least Squares)**:
-- User-product interaction matrix factorization
-- Implicit feedback scoring
-- Cold-start strategy: drop
-- Non-negative constraints
-- RMSE evaluation
+### Content-Based Filtering
+- Analyzes product attributes (category, brand, name)
+- Uses TF-IDF vectorization for text features
+- Recommends products with similar content characteristics
 
-## Output Format
+### Hybrid Approach
+- Combines all three methods with configurable weights
+- Normalizes scores across different algorithms
+- Provides balanced recommendations leveraging multiple signals
 
-Batch recommendations saved as Delta table with columns:
-- `user_id`: User identifier
-- `product_id`: Recommended product
-- `recommendation_score`: Predicted rating
+## Performance Features
 
-## Performance
+- **Caching**: System initialization is cached for faster subsequent runs
+- **Lazy Loading**: Data is loaded only when needed
+- **Batch Processing**: Efficient handling of multiple recommendations
+- **Progress Tracking**: Real-time updates during batch operations
+- **Memory Optimization**: Efficient pandas operations
 
-- Handles 60,000+ interactions
-- Distributed processing across cluster
-- Delta Lake for efficient storage
-- Adaptive query execution enabled
+## Production Features
+
+- **Logging**: Comprehensive logging for debugging and monitoring
+- **Error Handling**: Graceful error handling with user-friendly messages
+- **Session State**: Maintains user state across interactions
+- **Metrics Tracking**: Request counting and timing
+- **Export Functions**: CSV download for all results
+- **Responsive Design**: Professional UI with custom CSS
+- **Confidence Scores**: Percentage-based confidence for all recommendations
+
+## Technical Stack
+
+- **Backend**: Python 3.11+
+- **ML Libraries**: scikit-learn, pandas, numpy, scipy
+- **Web Framework**: Streamlit
+- **Visualization**: Plotly
+- **Algorithms**: Cosine Similarity, TF-IDF, Matrix Factorization
+
+## Dataset Requirements
+
+The system expects a CSV file with the following columns:
+- `user_id`: Unique user identifier
+- `product_id`: Unique product identifier
+- `product_name`: Product name
+- `category`: Product category
+- `brand`: Product brand
+- `interaction_type`: Type of interaction (purchase, view, wishlist, add_to_cart)
+- `rating`: User rating (optional)
+- `interaction_score`: Calculated interaction strength
+- Additional metadata fields
+
+## License
+
+Open source
+
+## Support
+
+For issues or questions, please check the documentation or raise an issue in the repository.
+
+## License
+
+Open source
