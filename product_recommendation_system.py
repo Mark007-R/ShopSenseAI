@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional
 import warnings
+import logging
+import time
+
 warnings.filterwarnings('ignore')
 
 from config import (
@@ -13,50 +16,106 @@ from config import (
     HYBRID_WEIGHTS,
     MIN_PURCHASE_THRESHOLD,
 )
+from cache_utils import matrix_cache, recommendation_cache
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class ProductRecommendationSystem:
+    """Optimized hybrid recommendation system with caching and performance improvements."""
     
-    def __init__(self, data_path: str, min_purchase_threshold: int = 1):
-        self.data = pd.read_csv(data_path)
+    def __init__(self, data_path: str, min_purchase_threshold: int = 1, enable_cache: bool = True):
+        self.data_path = data_path
         self.min_purchase_threshold = min_purchase_threshold
+        self.enable_cache = enable_cache
+        self._load_data()
         self._preprocess_data()
         self._build_matrices()
+        logger.info("ProductRecommendationSystem initialized successfully")
+    
+    def _load_data(self):
+        """Load data efficiently using pandas optimizations."""
+        logger.info(f"Loading data from {self.data_path}...")
+        start = time.time()
+        self.data = pd.read_csv(self.data_path)
+        elapsed = time.time() - start
+        logger.info(f"Data loaded in {elapsed:.3f}s: {len(self.data)} records")
         
     def _preprocess_data(self):
-        print("Preprocessing data...")
+        """Optimized data preprocessing with reduced allocations."""
+        logger.info("Preprocessing data...")
         self.data['final_price_inr'].fillna(self.data['listed_price_inr'], inplace=True)
         self.data['rating'].fillna(self.data['rating'].median(), inplace=True)
         self.data['satisfaction_score'].fillna(self.data['satisfaction_score'].median(), inplace=True)
         self.data['interaction_score'] = self._calculate_interaction_score()
-        print(f"Complete: {len(self.data)} records, {self.data['user_id'].nunique()} users, {self.data['product_id'].nunique()} products")
+        logger.info(
+            f"Complete: {len(self.data)} records, {self.data['user_id'].nunique()} users, "
+            f"{self.data['product_id'].nunique()} products"
+        )
         
     def _calculate_interaction_score(self) -> np.ndarray:
-        scores = pd.Series(0.5, index=self.data.index)
-        scores[self.data['interaction_type'] == 'purchase'] = 5.0
-        scores[self.data['interaction_type'] == 'add_to_cart'] = 2.0
-        scores[self.data['interaction_type'] == 'wishlist'] = 1.0
-        review_boost = (self.data['review_given'] == 1).astype(float) * 3.0
-        scores = scores + review_boost
+        """Vectorized calculation of interaction scores for better performance."""
+        scores = pd.Series(0.5, index=self.data.index, dtype=np.float32)
+        
+        # Vectorized score assignment
+        type_scores = {
+            'purchase': 5.0,
+            'add_to_cart': 2.0,
+            'wishlist': 1.0
+        }
+        
+        for interaction_type, score in type_scores.items():
+            mask = self.data['interaction_type'] == interaction_type
+            scores[mask] = score
+        
+        # Vectorized review boost
+        review_boost = (self.data['review_given'] == 1).astype(np.float32) * 3.0
+        scores = (scores + review_boost).astype(np.float32)
+        
+        # Vectorized engagement factor
+        max_session = self.data['session_duration_sec'].max()
+        max_pages = self.data['pages_visited'].max()
+        
         engagement_factor = (
-            (self.data['session_duration_sec'] / self.data['session_duration_sec'].max()) * 0.2 +
-            (self.data['pages_visited'] / self.data['pages_visited'].max()) * 0.2
+            (self.data['session_duration_sec'] / max_session) * 0.2 +
+            (self.data['pages_visited'] / max_pages) * 0.2
         )
-        return scores + engagement_factor
+        
+        return (scores + engagement_factor).astype(np.float32)
     
     def _build_matrices(self):
-        print("Building matrices...")
+        """Build similarity and feature matrices with caching."""
+        logger.info("Building matrices...")
+        start = time.time()
+        
+        # User-product matrix
         self.user_product_matrix = self.data.pivot_table(
             index='user_id', columns='product_id', values='interaction_score',
             aggfunc='sum', fill_value=0
-        )
+        ).astype(np.float32)
+        
+        # Purchase matrix
         self.purchase_matrix = self.data[self.data['interaction_type'] == 'purchase'].pivot_table(
             index='user_id', columns='product_id', values='purchase',
             aggfunc='sum', fill_value=0
-        )
+        ).astype(np.float32)
+        
+        # Build product features and TF-IDF
         self._build_product_features()
+        
+        # Create user index mapping for O(1) lookups
+        self.user_idx_map = {uid: idx for idx, uid in enumerate(self.user_product_matrix.index)}
+        self.product_idx_map = {pid: idx for idx, pid in enumerate(self.user_product_matrix.columns)}
+        
+        elapsed = time.time() - start
+        logger.info(f"Matrices built in {elapsed:.3f}s")
     
     def _build_product_features(self):
+        """Build product features with TF-IDF vectorization."""
+        logger.info("Building product features...")
+        
+        # Aggregate product information
         product_summary = self.data.groupby('product_id').agg({
             'product_name': 'first',
             'category': 'first',
@@ -65,60 +124,102 @@ class ProductRecommendationSystem:
             'rating': 'mean',
             'satisfaction_score': 'mean',
         }).reset_index()
+        
+        # Create feature text
         product_summary['features'] = (
-            product_summary['product_name'] + ' ' +
-            product_summary['category'] + ' ' +
-            product_summary['brand']
+            product_summary['product_name'].fillna('') + ' ' +
+            product_summary['category'].fillna('') + ' ' +
+            product_summary['brand'].fillna('')
         ).str.lower()
+        
         self.product_features = product_summary.set_index('product_id')
-        tfidf = TfidfVectorizer(max_features=50, stop_words='english')
+        
+        # TF-IDF vectorization
+        tfidf = TfidfVectorizer(max_features=50, stop_words='english', norm='l2')
         self.product_tfidf = tfidf.fit_transform(self.product_features['features'])
+        
+        logger.info(f"Product features built for {len(self.product_features)} products")
+    
+    def _get_user_idx_fast(self, user_id: str) -> Optional[int]:
+        """Fast O(1) user index lookup."""
+        return self.user_idx_map.get(user_id)
+    
+    def _get_product_idx_fast(self, product_id: str) -> Optional[int]:
+        """Fast O(1) product index lookup."""
+        return self.product_idx_map.get(product_id)
     
     def collaborative_filtering_user_based(
         self, user_id: str, n_recommendations: int = DEFAULT_N_RECOMMENDATIONS,
         n_similar_users: int = DEFAULT_N_SIMILAR_USERS
     ) -> List[Dict]:
-        if user_id not in self.user_product_matrix.index:
+        """Optimized user-based collaborative filtering."""
+        user_idx = self._get_user_idx_fast(user_id)
+        
+        if user_idx is None:
             return self._get_popular_products(n_recommendations)
         
-        user_idx = list(self.user_product_matrix.index).index(user_id)
-        similarities = cosine_similarity(
-            self.user_product_matrix.iloc[user_idx:user_idx+1],
-            self.user_product_matrix
-        )[0]
+        # Compute similarities
+        user_vector = self.user_product_matrix.iloc[user_idx:user_idx+1]
+        similarities = cosine_similarity(user_vector, self.user_product_matrix)[0]
+        
+        # Find similar users (excluding self)
         similar_user_indices = np.argsort(similarities)[::-1][1:n_similar_users+1]
-        user_products = set(self.user_product_matrix.columns[self.user_product_matrix.iloc[user_idx] > 0])
+        
+        # Get user's products
+        user_products = set(self.user_product_matrix.columns[user_vector.values[0] > 0])
+        
+        # Aggregate similar users' products
         similar_users_products = {}
         for idx in similar_user_indices:
-            for product in self.user_product_matrix.columns:
-                if (self.user_product_matrix.iloc[idx][product] > 0 and product not in user_products):
-                    similar_users_products[product] = (
-                        similar_users_products.get(product, 0) +
-                        similarities[idx] * self.user_product_matrix.iloc[idx][product]
-                    )
+            products = self.user_product_matrix.iloc[idx]
+            mask = products > 0
+            candidates = self.user_product_matrix.columns[mask]
+            
+            for product in candidates:
+                if product not in user_products:
+                    score = float(similarities[idx]) * float(products[product])
+                    similar_users_products[product] = similar_users_products.get(product, 0) + score
+        
         return self._format_recommendations(similar_users_products, n_recommendations)
     
     def collaborative_filtering_item_based(
         self, user_id: str, n_recommendations: int = DEFAULT_N_RECOMMENDATIONS
     ) -> List[Dict]:
-        if user_id not in self.purchase_matrix.index:
+        """Optimized item-based collaborative filtering."""
+        user_idx = self._get_user_idx_fast(user_id)
+        
+        if user_idx is None:
             return self._get_popular_products(n_recommendations)
         
-        user_idx = list(self.purchase_matrix.index).index(user_id)
-        purchased_products = self.purchase_matrix.columns[self.purchase_matrix.iloc[user_idx] > 0]
-        if len(purchased_products) == 0:
+        # Get purchased products
+        user_purchases = self.purchase_matrix.iloc[user_idx]
+        purchased_products = self.purchase_matrix.columns[user_purchases > 0].tolist()
+        
+        if not purchased_products:
             return self._get_popular_products(n_recommendations)
         
+        # Compute item similarity once
         item_similarity = cosine_similarity(self.product_tfidf)
+        
+        # Score recommendations
         recommendations = {}
+        product_ids_list = list(self.product_features.index)
+        
         for purchased_product in purchased_products:
-            product_idx = list(self.product_features.index).index(purchased_product)
-            similar_products = np.argsort(item_similarity[product_idx])[::-1][1:]
-            for sim_idx in similar_products[:20]:
-                similar_product = self.product_features.index[sim_idx]
+            p_idx = product_ids_list.index(purchased_product) if purchased_product in product_ids_list else -1
+            if p_idx == -1:
+                continue
+            
+            # Find similar products
+            similarities = item_similarity[p_idx]
+            similar_indices = np.argsort(similarities)[::-1][1:21]
+            
+            for sim_idx in similar_indices:
+                similar_product = product_ids_list[sim_idx]
                 if similar_product not in purchased_products:
-                    similarity_score = item_similarity[product_idx][sim_idx]
+                    similarity_score = float(similarities[sim_idx])
                     recommendations[similar_product] = recommendations.get(similar_product, 0) + similarity_score
+        
         return self._format_recommendations(recommendations, n_recommendations)
     
     def content_based_filtering(

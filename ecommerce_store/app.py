@@ -40,31 +40,10 @@ def display_star_rating(rating):
     return stars
 
 def product_card(product, key_prefix=""):
-    # Map product IDs to placeholder images from Picsum (Lorem Picsum - more reliable than Unsplash)
-    placeholder_images = {
-        'P001': 'https://picsum.photos/seed/tv/400/300',
-        'P002': 'https://picsum.photos/seed/fridge/400/300',
-        'P003': 'https://picsum.photos/seed/washer/400/300',
-        'P004': 'https://picsum.photos/seed/headphones/400/300',
-        'P005': 'https://picsum.photos/seed/iphone/400/300',
-        'P006': 'https://picsum.photos/seed/instantpot/400/300',
-        'P007': 'https://picsum.photos/seed/dyson/400/300',
-        'P008': 'https://picsum.photos/seed/laptop/400/300',
-        'P009': 'https://picsum.photos/seed/airfryer/400/300',
-        'P010': 'https://picsum.photos/seed/camera/400/300',
-        'P011': 'https://picsum.photos/seed/espresso/400/300',
-        'P012': 'https://picsum.photos/seed/ipad/400/300',
-        'P013': 'https://picsum.photos/seed/thermostat/400/300',
-        'P014': 'https://picsum.photos/seed/mixer/400/300',
-        'P015': 'https://picsum.photos/seed/doorbell/400/300',
-        'P016': 'https://picsum.photos/seed/speaker/400/300',
-        'P017': 'https://picsum.photos/seed/roomba/400/300',
-        'P018': 'https://picsum.photos/seed/surface/400/300',
-        'P019': 'https://picsum.photos/seed/ninja/400/300',
-        'P020': 'https://picsum.photos/seed/gopro/400/300',
-    }
-    
-    image_url = placeholder_images.get(product['product_id'], 'https://picsum.photos/seed/default/400/300')
+    # Use actual product image from CSV with Unsplash optimization
+    image_url = product["image_url"]
+    if "unsplash" in image_url.lower():
+        image_url += "&auto=format&fit=crop&w=400&q=80" if "?" in image_url else "?auto=format&fit=crop&w=400&q=80"
     
     discount_badge = ""
     discount_pct = 0
@@ -78,7 +57,7 @@ def product_card(product, key_prefix=""):
              onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(29,185,84,0.3)';"
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';">
             {discount_badge}
-            <img src='{image_url}' style='width: 100%; height: 220px; object-fit: cover;'/>
+            <img src='{image_url}' style='width: 100%; height: 220px; object-fit: cover;' onerror="this.src='https://via.placeholder.com/400x220/1a1a1a/1DB954?text={product['brand']}'" />
             <div style='padding: 16px;'>
                 <h3 style='margin: 0 0 8px 0; color: #fff; font-size: 15px; font-weight: 600; height: 40px; overflow: hidden; line-height: 1.3;'>{product["name"]}</h3>
                 <p style='color: #b3b3b3; font-size: 13px; margin: 0 0 12px 0;'>{product["brand"]}</p>
@@ -109,19 +88,10 @@ def product_card(product, key_prefix=""):
 def product_detail_page():
     product = recommender.get_product_by_id(st.session_state.selected_product)
     
-    placeholder_images = {
-        'P001': 'https://picsum.photos/seed/tv/800/600', 'P002': 'https://picsum.photos/seed/fridge/800/600',
-        'P003': 'https://picsum.photos/seed/washer/800/600', 'P004': 'https://picsum.photos/seed/headphones/800/600',
-        'P005': 'https://picsum.photos/seed/iphone/800/600', 'P006': 'https://picsum.photos/seed/instantpot/800/600',
-        'P007': 'https://picsum.photos/seed/dyson/800/600', 'P008': 'https://picsum.photos/seed/laptop/800/600',
-        'P009': 'https://picsum.photos/seed/airfryer/800/600', 'P010': 'https://picsum.photos/seed/camera/800/600',
-        'P011': 'https://picsum.photos/seed/espresso/800/600', 'P012': 'https://picsum.photos/seed/ipad/800/600',
-        'P013': 'https://picsum.photos/seed/thermostat/800/600', 'P014': 'https://picsum.photos/seed/mixer/800/600',
-        'P015': 'https://picsum.photos/seed/doorbell/800/600', 'P016': 'https://picsum.photos/seed/speaker/800/600',
-        'P017': 'https://picsum.photos/seed/roomba/800/600', 'P018': 'https://picsum.photos/seed/surface/800/600',
-        'P019': 'https://picsum.photos/seed/ninja/800/600', 'P020': 'https://picsum.photos/seed/gopro/800/600',
-    }
-    image_url = placeholder_images.get(product['product_id'], 'https://picsum.photos/seed/default/800/600')
+    # Use actual product image with optimizations
+    image_url = product['image_url']
+    if "unsplash" in image_url.lower():
+        image_url += "&auto=format&fit=crop&w=800&q=90" if "?" in image_url else "?auto=format&fit=crop&w=800&q=90"
     
     if st.button("← Back to Shopping", type="secondary"):
         st.session_state.current_page = 'home'
@@ -134,8 +104,8 @@ def product_detail_page():
     with col1:
         st.markdown(f"""
             <img src='{image_url}' 
-                 style='width: 100%; border-radius: 12px; box-shadow: 0 8px 24px rgba(29, 185, 84, 0.3);' 
-                 onerror=\"this.src='https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=90'\"/>
+                 style='width: 100%; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);' 
+                 onerror="this.src='https://via.placeholder.com/800x600/1a1a1a/1DB954?text={product['brand']}'" />
         """, unsafe_allow_html=True)
     
     with col2:
