@@ -129,7 +129,7 @@ class CollaborativeFilteringModel:
     def recommend(self, user_idx, product_ids, user_item_row, top_n=5):
         if self.predicted_matrix is None:
             return []
-        scores = self.predicted_matrix[user_idx]
+        scores = self.predicted_matrix[user_idx].copy()   # copy — never mutate predicted_matrix
         # Exclude already interacted products
         interacted = np.where(user_item_row > 0)[0]
         scores[interacted] = -np.inf
@@ -149,10 +149,10 @@ class UserBasedCF:
         self.similarity_matrix = cosine_similarity(matrix)
         return self
 
-    def recommend(self, user_idx, product_ids, top_n=5):
+    def recommend(self, user_idx, product_ids, top_n=5, masked_row=None):
         if self.similarity_matrix is None:
             return []
-        sim_scores = self.similarity_matrix[user_idx]
+        sim_scores = self.similarity_matrix[user_idx].copy()
         sim_scores[user_idx] = 0  # exclude self
         top_users = np.argsort(sim_scores)[::-1][:20]
         # Weighted sum of neighbor interactions
@@ -164,8 +164,9 @@ class UserBasedCF:
             weight_sum += w
         if weight_sum > 0:
             weighted /= weight_sum
-        # Exclude already interacted
-        interacted = np.where(self.matrix[user_idx] > 0)[0]
+        # Use masked_row if provided (evaluation), else fall back to trained row
+        exclude_vec = masked_row if masked_row is not None else self.matrix[user_idx]
+        interacted = np.where(exclude_vec > 0)[0]
         weighted[interacted] = -np.inf
         top_indices = np.argsort(weighted)[::-1][:top_n]
         return [(product_ids[i], float(weighted[i])) for i in top_indices if weighted[i] > -np.inf]
@@ -183,9 +184,9 @@ class ItemBasedCF:
         self.item_similarity = cosine_similarity(matrix.T)
         return self
 
-    def recommend(self, user_idx, product_ids, top_n=5):
-        user_vec = self.matrix[user_idx]
-        scores = self.item_similarity.T.dot(user_vec)
+    def recommend(self, user_idx, product_ids, top_n=5, masked_row=None):
+        user_vec = masked_row if masked_row is not None else self.matrix[user_idx]
+        scores = self.item_similarity.T.dot(user_vec).copy()
         interacted = np.where(user_vec > 0)[0]
         scores[interacted] = -np.inf
         top_indices = np.argsort(scores)[::-1][:top_n]
@@ -255,72 +256,116 @@ class TrendingModel:
 
 
 # ─────────────────────────────────────────────
-# STEP 5: EVALUATION
+# STEP 5: EVALUATION  (Temporal Train / Test Split)
 # ─────────────────────────────────────────────
 class Evaluator:
-    def __init__(self, matrix, user_ids, product_ids):
-        self.matrix = matrix
-        self.user_ids = user_ids
+    """
+    Proper offline evaluation using an 80/20 temporal split.
+
+    Why temporal split instead of leave-one-out (LOO)?
+    ────────────────────────────────────────────────────
+    LOO on a pre-trained similarity/SVD matrix suffers from look-ahead bias:
+    the model was trained on the FULL matrix including the held-out item, so
+    neighbours were partly chosen *because* they share that item — making it
+    trivially easy to predict back (User-CF inflates to ~92%, meaningless).
+
+    A temporal split avoids this completely:
+      • Models are retrained on the TRAIN portion only (interactions before cutoff)
+      • Ground-truth is items the user interacted with AFTER the cutoff
+        that were NOT already in their training history
+      • Precision@K = fraction of users for whom ≥1 recommended item
+        appears in their future ground-truth set
+    """
+
+    def __init__(self, df, product_ids):
+        self.df = df
         self.product_ids = product_ids
+        self._build_split()
 
-    def precision_at_k(self, model, k=5, sample_size=200):
-        """Precision@K using leave-one-out evaluation"""
-        precisions = []
-        sample_users = np.random.choice(len(self.user_ids), min(sample_size, len(self.user_ids)), replace=False)
+    def _build_split(self):
+        df = self.df.copy()
+        df['interaction_date'] = pd.to_datetime(df['interaction_date'])
+        cutoff = pd.Timestamp(df['interaction_date'].quantile(0.8))
+        self.cutoff = cutoff
 
-        for uid in sample_users:
-            interacted = np.where(self.matrix[uid] > 0)[0]
-            if len(interacted) < 2:
+        train_df = df[df['interaction_date'] <= cutoff]
+        test_df  = df[df['interaction_date'] > cutoff]
+
+        # Build train matrix
+        agg = train_df.groupby(['user_id', 'product_id'])['engagement_score'].sum().reset_index()
+        pivot = agg.pivot(index='user_id', columns='product_id',
+                          values='engagement_score').fillna(0)
+        pivot = pivot.reindex(columns=self.product_ids, fill_value=0)
+
+        self.train_matrix   = pivot.values
+        self.train_user_ids = list(pivot.index)
+        self.train_user_idx = {u: i for i, u in enumerate(self.train_user_ids)}
+
+        # Build test ground truth: unseen items per user after cutoff
+        agg_test = test_df.groupby(['user_id', 'product_id'])['engagement_score'].sum().reset_index()
+        self.test_gt = {}
+        for _, row in agg_test.iterrows():
+            uid, pid = row['user_id'], row['product_id']
+            if uid not in self.train_user_idx or pid not in self.product_ids:
                 continue
-            # Hold out one item
-            held_out_idx = np.random.choice(interacted)
-            held_out_pid = self.product_ids[held_out_idx]
+            uidx = self.train_user_idx[uid]
+            pidx = self.product_ids.index(pid)
+            if self.train_matrix[uidx][pidx] == 0:          # truly unseen during training
+                self.test_gt.setdefault(uid, set()).add(pid)
 
-            # Temporarily mask
-            original = self.matrix[uid][held_out_idx]
-            self.matrix[uid][held_out_idx] = 0
+    def _retrain_and_score(self, ModelClass, model_kwargs, k, sample_size, seed):
+        """Retrain a fresh model on train-only data, then evaluate."""
+        model = ModelClass(**model_kwargs).train(self.train_matrix)
+        np.random.seed(seed)
+        users = list(self.test_gt.keys())
+        np.random.shuffle(users)
+        users = users[:sample_size]
 
-            try:
-                if isinstance(model, CollaborativeFilteringModel):
-                    recs = model.recommend(uid, self.product_ids, self.matrix[uid], top_n=k)
-                elif isinstance(model, UserBasedCF):
-                    recs = model.recommend(uid, self.product_ids, top_n=k)
-                elif isinstance(model, ItemBasedCF):
-                    recs = model.recommend(uid, self.product_ids, top_n=k)
-                else:
-                    recs = []
+        hits = []
+        for uid in users:
+            uidx = self.train_user_idx[uid]
+            train_row = self.train_matrix[uidx]
+            ground_truth = self.test_gt[uid]
 
-                rec_ids = [r[0] for r in recs]
-                hit = 1 if held_out_pid in rec_ids else 0
-                precisions.append(hit)
-            except Exception:
-                pass
-            finally:
-                self.matrix[uid][held_out_idx] = original
+            if isinstance(model, CollaborativeFilteringModel):
+                recs = model.recommend(uidx, self.product_ids, train_row.copy(), top_n=k)
+            elif isinstance(model, UserBasedCF):
+                recs = model.recommend(uidx, self.product_ids, top_n=k, masked_row=train_row)
+            elif isinstance(model, ItemBasedCF):
+                recs = model.recommend(uidx, self.product_ids, top_n=k, masked_row=train_row)
+            else:
+                recs = []
 
-        return np.mean(precisions) if precisions else 0.0
+            rec_pids = {r[0] for r in recs}
+            hits.append(1 if rec_pids & ground_truth else 0)
 
-    def coverage(self, all_recommendations, total_products):
-        """Catalog coverage: % of products ever recommended"""
-        recommended = set()
-        for recs in all_recommendations:
-            recommended.update([r[0] for r in recs])
-        return len(recommended) / total_products if total_products > 0 else 0
+        return round(np.mean(hits), 4) if hits else 0.0
 
-    def evaluate_all(self, svd_model, user_cf, item_cf):
+    def evaluate_all(self, k=5, sample_size=300, seed=42):
         results = {}
-        np.random.seed(42)
+        common = dict(k=k, sample_size=sample_size, seed=seed)
+
         results['SVD (Matrix Factorization)'] = {
-            'precision_at_5': round(self.precision_at_k(svd_model, k=5), 4),
+            'precision_at_5': self._retrain_and_score(
+                CollaborativeFilteringModel, {'n_factors': 20}, **common),
             'description': 'Latent factor model via SVD decomposition'
         }
         results['User-Based CF'] = {
-            'precision_at_5': round(self.precision_at_k(user_cf, k=5), 4),
+            'precision_at_5': self._retrain_and_score(
+                UserBasedCF, {}, **common),
             'description': 'Finds similar users and recommends their items'
         }
         results['Item-Based CF'] = {
-            'precision_at_5': round(self.precision_at_k(item_cf, k=5), 4),
+            'precision_at_5': self._retrain_and_score(
+                ItemBasedCF, {}, **common),
             'description': 'Recommends items similar to what the user liked'
+        }
+        results['_meta'] = {
+            'method': 'Temporal 80/20 train-test split',
+            'cutoff': str(self.cutoff.date()),
+            'test_users': len(self.test_gt),
+            'sample_size': sample_size,
+            'note': 'Models retrained on pre-cutoff data; ground truth = unseen post-cutoff interactions'
         }
         return results
 
@@ -419,8 +464,8 @@ class ProductRecommender:
         return recent.to_dict('records')
 
     def get_evaluation_results(self):
-        evaluator = Evaluator(self.matrix.copy(), self.user_ids, self.product_ids)
-        return evaluator.evaluate_all(self.svd_model, self.user_cf, self.item_cf)
+        evaluator = Evaluator(self.df, self.product_ids)
+        return evaluator.evaluate_all(k=5, sample_size=300, seed=42)
 
     def get_stats(self):
         return {
