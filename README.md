@@ -1,83 +1,106 @@
-# Product Recommendation System
+# Databricks Product Recommendation System
 
-## Overview
-
-A hybrid recommendation system combining collaborative filtering and content-based filtering for e-commerce product recommendations.
+ALS-based collaborative filtering recommendation system for Databricks platform.
 
 ## Features
 
-- User-Based Collaborative Filtering
-- Item-Based Collaborative Filtering
-- Content-Based Filtering
-- Hybrid Approach
-- Cold-Start Handling
-- Batch Processing
-- Databricks Support
+- **ALS Collaborative Filtering**: Scalable matrix factorization using Spark MLlib
+- **Batch Processing**: Generate recommendations for all users efficiently
+- **DBFS Integration**: Direct read/write to Databricks File System
+- **Delta Lake Output**: Save recommendations in Delta format
+- **PySpark Optimized**: Leverages Spark's distributed computing
 
-## Installation
+## Setup
 
-```bash
-pip install pandas numpy scikit-learn scipy
-```
-
-## Usage
-
-### Quick Start
+### 1. Upload Dataset to DBFS
 
 ```python
-from product_recommendation_system import ProductRecommendationSystem
-
-rec_system = ProductRecommendationSystem('product_recommendation_dataset_v2.csv')
-result = rec_system.get_recommendations(user_id='U00001', method='hybrid', n_recommendations=5)
-print(result)
+dbutils.fs.mkdirs("dbfs:/FileStore/datasets/")
+dbutils.fs.cp("file:/path/to/product_recommendation_dataset_v2.csv", 
+              "dbfs:/FileStore/datasets/product_recommendation_dataset_v2.csv")
 ```
 
-### Interactive Mode
+### 2. Import Notebook
 
-```bash
-python QUICKSTART.py
-```
+- Upload `Databricks_Recommendation_Notebook.ipynb` to your Databricks workspace
+- Or upload `databricks_recommendation_system.py` and `databricks_main.py`
 
-### Batch Processing
+### 3. Run
+
+Open the notebook and execute all cells, or run:
 
 ```python
-rec_system.generate_batch_recommendations(
-    method='hybrid',
-    n_recommendations=5,
-    output_path='recommendations.csv'
-)
+%run ./databricks_main
 ```
 
 ## Configuration
 
-Edit `config.py` to customize:
-- DEFAULT_METHOD
-- DEFAULT_N_RECOMMENDATIONS
-- HYBRID_WEIGHTS
-- MIN_PURCHASE_THRESHOLD
+Edit `config.py` for customization:
+
+- `DATA_PATH`: DBFS path to dataset
+- `OUTPUT_PATH`: DBFS path for batch recommendations
+- `ALS_RANK`: Model latent factors (default: 10)
+- `ALS_MAX_ITER`: Training iterations (default: 10)
+- `ALS_REG_PARAM`: Regularization (default: 0.01)
+- `DEFAULT_N_RECOMMENDATIONS`: Recommendations per user (default: 20)
+
+## Usage
+
+### Interactive Mode
+
+```python
+from databricks_recommendation_system import DatabricksRecommendationSystem
+import config
+
+rec_system = DatabricksRecommendationSystem()
+df = rec_system.load_data(config.DATA_PATH)
+interactions_df = rec_system.preprocess_interactions(df)
+model = rec_system.build_als_model(interactions_df)
+
+# Get recommendations for specific users
+user_recs = rec_system.get_user_recommendations(["USER_12345"], 10)
+display(user_recs)
+```
+
+### Batch Mode
+
+```python
+# Generate recommendations for all users
+batch_recs = rec_system.generate_batch_recommendations(
+    interactions_df,
+    num_recommendations=20,
+    output_path=config.OUTPUT_PATH
+)
+```
 
 ## File Structure
 
-- `product_recommendation_system.py` - Main recommendation engine
-- `databricks_recommendation_system.py` - Databricks/PySpark implementation
-- `config.py` - Configuration settings
-- `QUICKSTART.py` - Interactive demo script
-- `datasets/product_recommendation_dataset_v2.csv` - Sample dataset
+- `databricks_recommendation_system.py`: Core ALS recommendation engine
+- `Databricks_Recommendation_Notebook.ipynb`: Interactive notebook
+- `databricks_main.py`: Automated pipeline script
+- `config.py`: Configuration settings
+- `requirements.txt`: Dependencies (PySpark 3.3+)
+- `datasets/`: Sample dataset folder
 
-## Methods
+## Model Details
 
-### Collaborative Filtering (User-Based)
-Recommends products based on similar users' preferences.
+**ALS (Alternating Least Squares)**:
+- User-product interaction matrix factorization
+- Implicit feedback scoring
+- Cold-start strategy: drop
+- Non-negative constraints
+- RMSE evaluation
 
-### Collaborative Filtering (Item-Based)
-Recommends products similar to those the user has purchased.
+## Output Format
 
-### Content-Based Filtering
-Recommends products in similar categories/brands to user preferences.
+Batch recommendations saved as Delta table with columns:
+- `user_id`: User identifier
+- `product_id`: Recommended product
+- `recommendation_score`: Predicted rating
 
-### Hybrid
-Combines all methods with weighted scores for best results.
+## Performance
 
-## License
-
-Open source
+- Handles 60,000+ interactions
+- Distributed processing across cluster
+- Delta Lake for efficient storage
+- Adaptive query execution enabled
