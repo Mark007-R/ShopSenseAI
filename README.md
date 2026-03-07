@@ -1,233 +1,241 @@
-# 🛍️ ShopSense — AI Product Recommendation System
+# ShopSenseAI
 
-A production-grade recommendation engine built with Flask, trained on 60,000 real user-product interactions across 5,000 users and 50 products spanning 6 categories.
+ShopSenseAI is a Flask-based product recommendation web app that combines collaborative filtering, content-based similarity, and popularity fallback in one project.
 
----
+It includes:
+- Personalized recommendations for known users.
+- Cold-start recommendations for guest users based on selected products.
+- Similar product lookup.
+- Model evaluation endpoint using a temporal split.
+- Single-page UI for exploring all flows.
 
-## 🏗️ Architecture
+## Features
 
+- `SVD` matrix factorization recommender.
+- `User-Based CF` recommender using user-user cosine similarity.
+- `Item-Based CF` recommender using item-item cosine similarity.
+- `Hybrid` recommender that blends SVD and Item-CF scores.
+- `Content-Based` similar-item lookup using category, brand, and normalized price.
+- `Trending` model using weighted interactions from recent 90-day activity.
+- Guest cold-start recommendations from a product basket plus interaction intent.
+- Evaluation pipeline with Precision@5 on a temporal 80/20 split.
+
+## Tech Stack
+
+- Python
+- Flask
+- pandas
+- numpy
+- scikit-learn
+- scipy
+- HTML/CSS/Vanilla JavaScript
+
+## Project Structure
+
+```text
+ShopSenseAI/
+|-- app.py
+|-- recommender.py
+|-- requirements.txt
+|-- README.md
+|-- data/
+|   `-- product_recommendation_dataset_v2.csv
+|-- templates/
+|   `-- index.html
+|-- __pycache__/
+`-- {templates,static/   (extra malformed folder present in this workspace)
 ```
-Dataset (60K interactions, 37 features)
-    ↓
-Data Preprocessing
- • Interaction weighting (view=1, wishlist=2, cart=3, purchase=5)
- • Engagement score = interaction + rating boost − return penalty
- • Feature normalization & encoding
-    ↓
-User-Item Matrix (5000 × 50 engagement pivot)
-    ↓
-Recommendation Algorithms
- ├── SVD Matrix Factorization  (Model-based CF)
- ├── User-Based CF             (Memory-based CF)
- ├── Item-Based CF             (Memory-based CF)
- ├── Content-Based Filtering   (Category + Brand + Price similarity)
- └── Trending / Popularity     (Cold-start fallback)
-    ↓
-Model Training
- • SVD: k=20 latent factors on sparse matrix
- • Cosine similarity matrices for CF models
- • Content feature vectors via LabelEncoder + MinMaxScaler
-    ↓
-Evaluation
- • Precision@5 using Leave-One-Out
- • Catalog Coverage metric
-    ↓
-Flask Web App / REST API
- • GET /api/recommend
- • GET /api/similar
- • GET /api/trending
- • GET /api/evaluate
- • GET /api/stats
- • GET /api/history/<user_id>
+
+Main files:
+- `app.py`: Flask app and API routes.
+- `recommender.py`: preprocessing, model training, recommendation logic, and evaluation.
+- `templates/index.html`: frontend UI for user and guest recommendation flows.
+
+## How It Works
+
+1. Load and clean interaction data.
+2. Build engagement score per interaction.
+3. Aggregate to a user-item matrix.
+4. Train all recommendation models.
+5. Serve predictions through Flask APIs.
+
+Engagement score formula used in `recommender.py`:
+
+```text
+engagement_score = interaction_score
+                 + 0.5 * rating
+                 + 0.3 * (purchase * scroll_depth_pct / 100)
+                 - 1.5 * returned
 ```
 
----
+Interaction weights:
+- `view`: 1
+- `wishlist`: 2
+- `add_to_cart`: 3
+- `purchase`: 5
 
-## 🚀 Quick Start
+## Setup
 
-### 1. Install dependencies
+### 1. Clone and enter project
+
+```bash
+git clone <your-repo-url>
+cd ShopSenseAI
+```
+
+### 2. Create and activate virtual environment (recommended)
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Place dataset
-```
-recommendation_app/
-└── data/
-    └── product_recommendation_dataset_v2.csv
+### 4. Verify dataset path
+
+Make sure this file exists:
+
+```text
+data/product_recommendation_dataset_v2.csv
 ```
 
-### 3. Run the app
+### 5. Run the app
+
 ```bash
 python app.py
 ```
-Visit: **http://localhost:5000**
 
----
+Open:
 
-## 📡 API Reference
+```text
+http://localhost:5000
+```
+
+## API Reference
+
+### `GET /`
+
+Renders the main dashboard page.
 
 ### `GET /api/recommend`
-Returns personalized product recommendations for a user.
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `user_id` | string | required | e.g. `U00192` |
-| `algo` | string | `hybrid` | `hybrid`, `svd`, `user_cf`, `item_cf` |
-| `top_n` | int | `6` | Number of results |
+Get recommendations for an existing user.
 
-**Response:**
-```json
-{
-  "user_id": "U00192",
-  "algorithm": "hybrid",
-  "recommendations": [
-    {
-      "product_id": "P101",
-      "product_name": "Laptop Pro 15",
-      "category": "Electronics",
-      "brand": "Dell",
-      "price": 65999,
-      "score": 4.872
-    }
-  ],
-  "history": [...]
-}
+Query params:
+- `user_id` (required)
+- `algo` (optional): `hybrid` (default), `svd`, `user_cf`, `item_cf`
+- `top_n` (optional, default `6`)
+
+Example:
+
+```text
+/api/recommend?user_id=U00192&algo=hybrid&top_n=6
 ```
+
+Returns:
+- requested `user_id`
+- algorithm name
+- `recommendations` list
+- recent `history` list
 
 ### `GET /api/similar`
-Content-based similar product lookup.
-```
-GET /api/similar?product_id=P101&top_n=5
+
+Get similar items for a product using content features.
+
+Query params:
+- `product_id` (required)
+- `top_n` (optional, default `5`)
+
+Example:
+
+```text
+/api/similar?product_id=P101&top_n=5
 ```
 
 ### `GET /api/trending`
-Returns popularity-ranked products from last 90 days.
-```
-GET /api/trending?top_n=6
-```
+
+Get trending products from recent weighted interactions.
+
+Query params:
+- `top_n` (optional, default `6`)
 
 ### `GET /api/evaluate`
-Runs Precision@5 Leave-One-Out evaluation on all models (~30–60s).
-```
-GET /api/evaluate
-```
+
+Run evaluation across SVD, User-CF, and Item-CF.
+
+Returns:
+- per-model `precision_at_5`
+- model descriptions
+- `_meta` info with split cutoff, test users, and sampling details
 
 ### `GET /api/stats`
-Dataset overview and distribution stats.
+
+Returns dataset stats:
+- total users
+- total products
+- total interactions
+- category list
+- interaction breakdown
 
 ### `GET /api/history/<user_id>`
-Full interaction history for a user.
 
----
+Get recent interaction history for a specific user.
 
-## 🧠 Models Explained
+### `POST /api/guest_recommend`
 
-| Model | Type | Strength |
-|-------|------|----------|
-| **SVD Matrix Factorization** | Model-based CF | Captures latent user-product relationships; handles sparsity well |
-| **User-Based CF** | Memory-based CF | Finds look-alike users and borrows their preferences |
-| **Item-Based CF** | Memory-based CF | Recommends items co-liked with the user's history |
-| **Content-Based** | Feature similarity | Works without interaction data; great for similar-item widgets |
-| **Hybrid (SVD + Item-CF)** | Ensemble | Best overall accuracy (0.6×SVD + 0.4×Item-CF weighted blend) |
-| **Trending** | Popularity | Cold-start fallback for new/unknown users |
+Generate recommendations for guest users with no profile.
 
-### Engagement Score Formula
-```
-score = interaction_weight
-      + (rating × 0.5)
-      + (purchase × scroll_depth / 100 × 0.3)
-      - (returned × 1.5)
+Request body:
+
+```json
+{
+  "products": [
+    {"product_id": "P101", "interaction": "view"},
+    {"product_id": "P204", "interaction": "add_to_cart"}
+  ],
+  "top_n": 6
+}
 ```
 
----
+Response includes:
+- `recommendations`
+- `valid_seeds`
+- `method` (`item_cf_cold_start` or `trending_fallback`)
 
-## 📁 Project Structure
-```
-recommendation_app/
-├── app.py                  # Flask routes & API endpoints
-├── recommender.py          # Full ML pipeline
-├── requirements.txt
-├── data/
-│   └── product_recommendation_dataset_v2.csv
-└── templates/
-    └── index.html          # Interactive web dashboard
-```
+### `GET /api/catalogue`
 
----
+Returns product catalogue used by the guest picker in the UI.
 
-## ✨ What Would Make This Project STAND OUT
+## Frontend Overview
 
-### 🔴 High Impact (implement these first)
+The page in `templates/index.html` contains:
+- Existing user recommendation panel.
+- Similar product search panel.
+- Evaluation panel.
+- Tabbed recommendation/history output.
+- Guest recommendation workflow:
+  - catalogue search and category filters
+  - interest basket
+  - interaction-type selector per basket item
+  - cold-start recommendations with "because_of" explanation
 
-**1. Real-Time Feedback Loop**
-Track clicks on recommendations, capture implicit feedback, and retrain incrementally. A model that learns from its own suggestions creates a virtuous cycle — this is what separates Netflix-level systems from basic demos.
+## Common Issues
 
-**2. A/B Testing Framework**
-Serve different algorithms to different user cohorts and measure CTR, conversion, and revenue impact. Add a `/api/experiment` endpoint that randomly assigns users to control vs treatment. This is industry-standard and immediately credible in any interview or demo.
+- `FileNotFoundError` on startup:
+  - Confirm `data/product_recommendation_dataset_v2.csv` exists.
+- Empty recommendations for user:
+  - User may be unknown or sparse; app falls back to trending.
+- Slow first load:
+  - Models are trained at app startup, so first run takes longer.
 
-**3. Explainable Recommendations**
-Add a `reason` field to each recommendation: *"Because you purchased Iron by Philips"* or *"Trending in Home Appliances this week."* Explainability increases user trust and click-through rates by 15–30% in literature.
+## Notes
 
-### 🟡 Medium Impact (differentiation features)
-
-**4. Contextual Bandits / Online Learning**
-Use a multi-armed bandit (e.g., LinUCB) that balances exploration (showing new products) and exploitation (showing high-confidence picks). This outperforms static models in dynamic catalogs.
-
-**5. Session-Based Recommendations**
-Use an RNN or GRU to model within-session behavior: "User viewed A → B → C, next likely product is D." This is critical for retail because most sessions are anonymous.
-
-**6. Deep Learning Embedding Model**
-Train a two-tower neural network (user tower + item tower) using TensorFlow/PyTorch. Embed users and products into a shared latent space for ANN retrieval. This approach powers Amazon, YouTube, and Spotify at scale.
-
-**7. Segment-Aware Recommendations**
-The dataset has `user_segment` (tech_enthusiast, kitchen_chef, etc.). Add a segment-level prior — new users in "fitness_freak" segment immediately get fitness-weighted recommendations rather than generic trending.
-
-**8. Price Sensitivity Modeling**
-Use `clv_category` and `membership_tier` to adjust recommendations by price band. A Bronze/Low CLV user should not consistently receive ₹89,999 iPhone recommendations.
-
-### 🟢 Polish & Production (makes it portfolio-ready)
-
-**9. Redis Caching Layer**
-Cache user recommendation vectors in Redis with a 1-hour TTL. Reduces latency from ~200ms to ~5ms. Critical for production credibility.
-
-**10. Recommendation Diversity**
-Add a Maximum Marginal Relevance (MMR) post-processing step to ensure recommended products span multiple categories. Pure score optimization leads to category collapse (all recommendations from one category).
-
-**11. Cold-Start Onboarding Quiz**
-A 3-question onboarding flow ("What's your primary interest?", "Budget range?", "Device preference?") that seeds a new user's preference vector without requiring any history. Boosts initial engagement.
-
-**12. Monitoring Dashboard**
-Track recommendation metrics over time: mean precision, catalog coverage, novelty score, click-through rate. A live dashboard demonstrates operational maturity beyond a Jupyter notebook.
-
----
-
-## 📊 Evaluation Metrics Explained
-
-| Metric | What it measures | Why it matters |
-|--------|-----------------|----------------|
-| **Precision@K** | Of K recommended items, how many did the user actually interact with? | Primary accuracy metric |
-| **Catalog Coverage** | % of total products ever recommended across all users | Diversity — prevents popularity bias |
-| **Novelty** | Average inverse popularity of recommended items | Avoids recommending only blockbusters |
-| **Mean Reciprocal Rank** | How high does the first relevant item rank? | Quality of top recommendation |
-
----
-
-## 💡 Business Impact
-
-| Outcome | Industry Benchmark |
-|---------|-------------------|
-| Increase in average order value | +10–35% (Amazon: 35% revenue from recommendations) |
-| Improvement in session duration | +20–40% |
-| Reduction in bounce rate | -15–25% |
-| Customer retention uplift | +8–15% with personalization |
-
-A recommendation system that explains its suggestions, learns from feedback, and handles cold-start users is the difference between a classroom project and a production system worth deploying.
-
----
-
-## 🛠️ Tech Stack
-- **Backend**: Python 3.10+, Flask 2.3
-- **ML**: NumPy, SciPy (SVD), Scikit-learn (cosine similarity, encoders)
-- **Data**: Pandas
-- **Frontend**: Vanilla JS, Google Fonts (Syne + DM Sans)
+- App currently runs with `debug=True` in `app.py`.
+- Recommendation engine is initialized once at startup and reused per request.
