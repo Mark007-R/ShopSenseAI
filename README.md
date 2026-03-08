@@ -32,7 +32,7 @@ It includes:
 ![New User Input](images/New_User_Input.png)
 
 ### 4) New User Input Recommendation
-![New User Input Recommendation](images/New_User_Input_Recommendation.png)
+![New User Input Recommendation](images/New_User_Input_Recommendations.png)
 
 ## Tech Stack
 
