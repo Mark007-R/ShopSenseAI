@@ -22,16 +22,16 @@ It includes:
 
 ## Output
 
-### 1) User History
+### 1) User History(data based)
 ![User History](images/User_History.png)
 
-### 2) Existing User
+### 2) User History Based Recommendation(data based)
 ![Existing User](images/Existing_User.png)
 
-### 3) New User Input
+### 3) New User Input(model trained)
 ![New User Input](images/New_User_Input.png)
 
-### 4) New User Input Recommendation
+### 4) New User Input Recommendation(model trained)
 ![New User Input Recommendation](images/New_User_Input_Recommendations.png)
 
 ## Tech Stack
