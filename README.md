@@ -20,6 +20,20 @@ It includes:
 - Guest cold-start recommendations from a product basket plus interaction intent.
 - Evaluation pipeline with Precision@5 on a temporal 80/20 split.
 
+## Output
+
+### 1) User History
+![User History](images/User-History.png)
+
+### 2) Existing User
+![Existing User](images/Existing-User.png)
+
+### 3) New User Input
+![New User Input](images/New-User-Input.png)
+
+### 4) New User Input Recommendation
+![New User Input Recommendation](images/New_User_Input_Recommendation.png)
+
 ## Tech Stack
 
 - Python
