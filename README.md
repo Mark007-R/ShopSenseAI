@@ -23,13 +23,13 @@ It includes:
 ## Output
 
 ### 1) User History
-![User History](images/User-History.png)
+![User History](images/User_History.png)
 
 ### 2) Existing User
-![Existing User](images/Existing-User.png)
+![Existing User](images/Existing_User.png)
 
 ### 3) New User Input
-![New User Input](images/New-User-Input.png)
+![New User Input](images/New_User_Input.png)
 
 ### 4) New User Input Recommendation
 ![New User Input Recommendation](images/New_User_Input_Recommendation.png)
