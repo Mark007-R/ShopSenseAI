@@ -1,5 +1,7 @@
 # ShopSenseAI
 
+> 🔗 **Live demo:** https://iambatman07-shopsenseai.hf.space · [HF Space](https://huggingface.co/spaces/IamBatman07/ShopSenseAI)
+
 ShopSenseAI is a Flask-based product recommendation web app that combines collaborative filtering, content-based similarity, and popularity fallback in one project.
 
 It includes:
@@ -19,20 +21,6 @@ It includes:
 - `Trending` model using weighted interactions from recent 90-day activity.
 - Guest cold-start recommendations from a product basket plus interaction intent.
 - Evaluation pipeline with Precision@5 on a temporal 80/20 split.
-
-## Output
-
-### 1) User History(data based)
-![User History](images/User_History.png)
-
-### 2) User History Based Recommendation(data based)
-![Existing User](images/Existing_User.png)
-
-### 3) New User Input(model trained)
-![New User Input](images/New_User_Input.png)
-
-### 4) New User Input Recommendation(model trained)
-![New User Input Recommendation](images/New_User_Input_Recommendations.png)
 
 ## Tech Stack
 
