@@ -1,8 +1,8 @@
-# ShopSenseAI
+# Product-Recommendation-Engine
 
 > 🔗 **Live demo:** https://iambatman07-shopsenseai.hf.space · [HF Space](https://huggingface.co/spaces/IamBatman07/ShopSenseAI)
 
-ShopSenseAI is a Flask-based product recommendation web app that combines collaborative filtering, content-based similarity, and popularity fallback in one project.
+Product-Recommendation-Engine is a Flask-based product recommendation web app that combines collaborative filtering, content-based similarity, and popularity fallback in one project.
 
 It includes:
 - Personalized recommendations for known users.
@@ -61,7 +61,7 @@ Interaction weights:
 
 ```bash
 git clone <your-repo-url>
-cd ShopSenseAI
+cd Product-Recommendation-Engine
 ```
 
 ### 2. Create and activate virtual environment (recommended)
