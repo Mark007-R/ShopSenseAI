@@ -1,7 +1,5 @@
 # Product-Recommendation-Engine
 
-> 🔗 **Live demo:** https://iambatman07-product-recommendation-engine.hf.space · [HF Space](https://huggingface.co/spaces/IamBatman07/Product-Recommendation-Engine)
-
 Product-Recommendation-Engine is a Flask-based product recommendation web app that combines collaborative filtering, content-based similarity, and popularity fallback in one project.
 
 It includes:
